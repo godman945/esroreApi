@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="OFF">
+    <appenders>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%class{36}]%M(%L) %msg%xEx%n"/>
+        </Console>
+        
+        <RollingRandomAccessFile name="Appender"	immediateFlush="true" fileName="/home/godman945/log/esroreApi/esroreApi.log"
+			filePattern="/home/godman945/log/esroreApi/esroreApi.%d{yyyy-MM-dd}.log.gz">
+			<PatternLayout>
+				<pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%class{36}]%M(%L) %msg%xEx%n</pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+			</Policies>
+			<Filters>
+				<ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>  
+				<ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/> 
+			</Filters>
+		</RollingRandomAccessFile>
+    </appenders>
+    <loggers>
+        <root level="info">
+            <appender-ref ref="Appender" />
+        	<appender-ref ref="stdout" />
+        </root>
+        <logger name="org.springframework.boot.StartupInfoLogger" level="error"/>
+        <logger name="org.hibernate.annotations.common.reflection.java.JavaReflectionManager" level="warn"/>
+        <logger name="org.hibernate.engine.jdbc.internal.LobCreatorBuilder" level="warn"/>
+        <logger name="com.opensymphony.xwork2.spring.SpringObjectFactory" level="error" ref="stdout" />  
+        <logger name="org.apache.struts2.spring.StrutsSpringObjectFactory" level="error" ref="stdout" />
+        <logger name="org.springframework.remoting.rmi.RmiServiceExporte" level="error" ref="stdout" />
+        <logger name="org.apache.struts2.interceptor.CookieInterceptor" level="error" ref="stdout" />
+        <logger name="org.hibernate.hql.internal.ast.HqlSqlWalker" level="error" ref="stdout" />
+        <logger name="org.apache.commons.httpclient.HttpMethodBase" level="error" ref="stdout" />
+        <logger name="com.opensymphony.xwork2.config.ConfigurationManager" level="error" ref="stdout" />
+        <logger name="org.apache.struts2.dispatcher.Dispatche" level="error" ref="stdout" />
+        
+        
+       
+        
+    </loggers>
+</configuration>
