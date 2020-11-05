@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 public class RestApiController {
 
-	
+	 
 	@Value("${alex.msg}")
 	private String alexMsg;
 	
