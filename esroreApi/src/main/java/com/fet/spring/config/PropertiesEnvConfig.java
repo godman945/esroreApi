@@ -6,5 +6,5 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @PropertySource(value = {"application-${spring.profiles.active}.properties" })
-public class EnvConfig {
+public class PropertiesEnvConfig {
 }

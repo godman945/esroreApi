@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 2020/11/6 ?U?? 06:23:14 by Hibernate Tools 4.0.1.Final -->
+<hibernate-mapping>
+    <class name="Acc2giftLog" table="ACC2GIFT_LOG" schema="ES_DEV">
+        <comment>&#176;t&#165;&#243;&#195;&#216;&#171;~&#181;&#178;&#194;&#224;&#172;&#246;&#191;&#253;</comment>
+        <id name="seq" type="string">
+            <column name="SEQ" length="32" />
+            <generator class="assigned" />
+        </id>
+        <property name="fetNo" type="string">
+            <column name="FET_NO" length="32" />
+        </property>
+        <property name="toGift" type="java.lang.Character">
+            <column name="TO_GIFT" length="1">
+                <comment>1. &#176;t&#165;&#243;&#194;&#224;&#195;&#216;&#171;~ , 2.&#195;&#216;&#171;~&#194;&#224; &#176;t&#165;&#243;</comment>
+            </column>
+        </property>
+        <property name="quantity" type="java.lang.Integer">
+            <column name="QUANTITY" precision="8" scale="0" />
+        </property>
+        <property name="transDate" type="date">
+            <column name="TRANS_DATE" length="7" />
+        </property>
+    </class>
+</hibernate-mapping>

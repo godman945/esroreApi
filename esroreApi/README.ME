@@ -1,0 +1,13 @@
+蝦皮案子
+
+#指令
+java -jar TestApi.jar --spring.profiles.active=stg
+java -cp esroreApi.jar -Dloader.main=com.fet.estore.shopee.job.EstoreShopeeJob org.springframework.boot.loader.PropertiesLauncher --spring.profiles.active=prd
+
+#蝦皮回傳結果
+ {"rtnCode":"00000","rtnMsg":"SUCCESS","restData":{"rtnCode":"00000","rtnMsg":"SUCCESS"}}
+ 
+#需求
+1 如create_time 超過24小時(properties 設定) , cono 為空 ,cancel_flag 不為Y , 就 Call Allen 給的API ,給Shopee的 status 傳CNL24
+2 Call 成功後update cancel ='Y'
+

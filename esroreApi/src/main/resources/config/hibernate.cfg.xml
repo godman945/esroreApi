@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+		"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+		"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+	<session-factory name="CustomerDB">
+		<property name="connection.driver_class">oracle.jdbc.OracleDriver</property>
+		<property name="connection.url">jdbc:oracle:thin:@10.64.70.99:1530:estoreT3</property>
+		<property name="connection.username">es_dev</property>
+		<property name="connection.password">es_dev</property>
+		<property name="dialect">org.hibernate.dialect.Oracle8iDialect</property>
+		<property name="show_sql">true</property>
+	</session-factory>
+</hibernate-configuration>

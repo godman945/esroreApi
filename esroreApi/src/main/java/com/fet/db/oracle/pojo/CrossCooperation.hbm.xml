@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 2020/11/6 ?U?? 06:23:14 by Hibernate Tools 4.0.1.Final -->
+<hibernate-mapping>
+    <class name="CrossCooperation" table="CROSS_COOPERATION" schema="ES_DEV">
+        <composite-id name="id" class="CrossCooperationId">
+            <key-property name="orderNo" type="string">
+                <column name="ORDER_NO" length="20" />
+            </key-property>
+            <key-property name="userName" type="string">
+                <column name="USER_NAME" length="20" />
+            </key-property>
+            <key-property name="userMobile" type="string">
+                <column name="USER_MOBILE" length="10" />
+            </key-property>
+            <key-property name="orderType" type="string">
+                <column name="ORDER_TYPE" length="2" />
+            </key-property>
+            <key-property name="msisdn" type="string">
+                <column name="MSISDN" length="10" />
+            </key-property>
+            <key-property name="pcode" type="string">
+                <column name="PCODE" length="50" />
+            </key-property>
+            <key-property name="onsaleName" type="string">
+                <column name="ONSALE_NAME" length="100" />
+            </key-property>
+            <key-property name="productName" type="string">
+                <column name="PRODUCT_NAME" length="200" />
+            </key-property>
+            <key-property name="fetno" type="string">
+                <column name="FETNO" length="32" />
+            </key-property>
+            <key-property name="productPrice" type="long">
+                <column name="PRODUCT_PRICE" precision="11" scale="0" />
+            </key-property>
+            <key-property name="prepayment" type="long">
+                <column name="PREPAYMENT" precision="11" scale="0" />
+            </key-property>
+            <key-property name="totalAmount" type="long">
+                <column name="TOTAL_AMOUNT" precision="11" scale="0" />
+            </key-property>
+            <key-property name="cancelFlag" type="string">
+                <column name="CANCEL_FLAG" length="1" />
+            </key-property>
+            <key-property name="smsUrl" type="string">
+                <column name="SMS_URL" length="200" />
+            </key-property>
+            <key-property name="cono" type="string">
+                <column name="CONO" length="20" />
+            </key-property>
+            <key-property name="createDate" type="date">
+                <column name="CREATE_DATE" length="7" />
+            </key-property>
+            <key-property name="createTimestamp" type="string">
+                <column name="CREATE_TIMESTAMP" length="20" />
+            </key-property>
+            <key-property name="updateDate" type="date">
+                <column name="UPDATE_DATE" length="7" />
+            </key-property>
+            <key-property name="SOrderNo" type="string">
+                <column name="S_ORDER_NO" length="200" />
+            </key-property>
+            <key-property name="orderStatus" type="string">
+                <column name="ORDER_STATUS" length="10" />
+            </key-property>
+        </composite-id>
+    </class>
+</hibernate-mapping>
