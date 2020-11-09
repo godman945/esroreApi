@@ -8,6 +8,8 @@
 	<table-filter match-name="CROSS_COOPERATION_MAPPING"></table-filter>
 </hibernate-reverse-engineering>
  -->
+ 
  <hibernate-reverse-engineering>
 	<table-filter match-name="CROSS_COOPERATION"></table-filter>
+	<table-filter match-name="ACC2GIFT_LOG"></table-filter>
 </hibernate-reverse-engineering>

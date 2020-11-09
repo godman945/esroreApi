@@ -4,7 +4,7 @@
 		"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
 
-<!-- 
+<!--  -->
 	<session-factory name="CustomerDB">
 		<property name="connection.driver_class">oracle.jdbc.OracleDriver</property>
 		<property name="connection.url">jdbc:oracle:thin:@10.64.70.99:1530:estoreT3</property>
@@ -13,8 +13,9 @@
 		<property name="dialect">org.hibernate.dialect.Oracle8iDialect</property>
 		<property name="show_sql">true</property>
 	</session-factory>
-	 -->
+	
 	 
+	 <!-- 
 	 <session-factory name="CustomerDB">
 		<property name="connection.driver_class">oracle.jdbc.OracleDriver</property>
 		<property name="connection.url">jdbc:oracle:thin:@localhost:1530:orcl</property>
@@ -23,4 +24,5 @@
 		<property name="dialect">org.hibernate.dialect.Oracle8iDialect</property>
 		<property name="show_sql">true</property>
 	</session-factory>
+	 -->
 </hibernate-configuration>

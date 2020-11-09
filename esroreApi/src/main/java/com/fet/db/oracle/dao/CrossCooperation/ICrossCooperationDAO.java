@@ -1,11 +1,12 @@
 package com.fet.db.oracle.dao.CrossCooperation;
 
-import org.springframework.stereotype.Repository;
+import java.util.List;
 
 import com.fet.db.oracle.dao.IBaseDAO;
 import com.fet.db.oracle.pojo.CrossCooperation;
 
-@Repository
-public interface ICrossCooperationDAO extends IBaseDAO<CrossCooperation, String>  {
+public interface ICrossCooperationDAO extends IBaseDAO<CrossCooperation, String> {
+
+	public List<CrossCooperation> findShopeeUpdateJobData() throws Exception;
 
 }

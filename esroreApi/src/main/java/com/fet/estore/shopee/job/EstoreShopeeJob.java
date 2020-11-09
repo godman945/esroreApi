@@ -1,18 +1,18 @@
 package com.fet.estore.shopee.job;
 
-import java.util.ArrayList;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.hibernate.SessionFactory;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
@@ -20,76 +20,134 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+//import com.fet.db.oracle.dao.CrossCooperation.CrossCooperationDAO;
 import com.fet.db.oracle.pojo.CrossCooperation;
+import com.fet.db.oracle.service.CrossCooperation.ICrossCooperationService;
 import com.fet.soft.util.RestTemplateUtil;
 import com.fet.spring.init.SpringbootWebApplication;
 
 @Component
 public class EstoreShopeeJob {
 
-	private static final Log log = LogFactory.getLog(EstoreShopeeJob.class);
+//	private static final Log log = LogFactory.getLog(EstoreShopeeJob.class);
 
-	@PersistenceContext
-	private EntityManager entityManager;
+	private Logger log = LogManager.getLogger(getClass());
 
-//	@Transactional(readOnly=true)
+//	@PersistenceContext
+//	private EntityManager entityManager;
+
+	@Autowired
+	SessionFactory sessionFactory;
+
+	@Autowired
+	ICrossCooperationService crossCooperationService;
+
+	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+	@Value("${shopee.valid.hours}")
+	private int validHours = 24;
+
+	@Transactional
 	public void process() throws Exception {
+
+//		List<CrossCooperation> ale = crossCooperationService.loadAll();
+//		for (CrossCooperation crossCooperation : ale) {
+//			if(crossCooperation.getUserName().equals("TEST1")) {
+//				System.out.println(crossCooperation.getUserName());
+//				System.out.println(crossCooperation.getCancelFlag());
+//				
+//				
+////				crossCooperation.setCancelFlag("A");
+////				crossCooperationService.saveOrUpdate(crossCooperation);
+//			}
+//		}
+		if (true) {
+			return;
+		}
+
 		log.info("====EstoreShopeeJob.process() START====");
+		Timestamp jobTimeStamp = new Timestamp(System.currentTimeMillis());
 
-		String hr = "24";
+		List<CrossCooperation> crossCooperationList = crossCooperationService.findShopeeUpdateJobData();
 
-		Query query = entityManager.createQuery(
-				"  from CrossCooperation where 1=1 and  cono is null and (cancelFlag <> 'Y' or cancelFlag is null)  ");
-//			
-		List<CrossCooperation> crossCooperationList = query.getResultList();
-		
 		Iterator<CrossCooperation> crossCooperationIterator = crossCooperationList.iterator();
 		int index = 0;
 		int successTotal = 0;
 		int failTotal = 0;
-        while (crossCooperationIterator.hasNext()) {
-        	long startTime = System.currentTimeMillis();
+		log.info(">>>>>總共需要處理筆數:" + crossCooperationList.size());
+		while (crossCooperationIterator.hasNext()) {
+			long startTime = System.currentTimeMillis();
 			index = index + 1;
 			log.info(">>>>>>START PROCESS ITEM:" + index);
-        	try {
-        		CrossCooperation crossCooperation = crossCooperationIterator.next();
-    			log.info(crossCooperation.getUserName());
-    			log.info(crossCooperation.getCreateTime());
-            	
-    			
-    			if(index==2) {
-    				List s= new ArrayList();
-    				s.get(3);
-    			}
-    			Map<String, String> data = new HashMap<>();
-    			data.put(">>>>>>orderSN", "201102VMWCUM1N");
-    			data.put(">>>>>>status", "CNL24");
-    			data.put(">>>>>>logistics", "HTC");
-    			data.put(">>>>>>logisticsNo", "999999999");
-    			String url = "http://10.64.33.156:48080/estore-api/shop/updateShopeeOrderStatus";
-    			url = "http://localhost:5080/alexSpringBoot/products";
-    			String result = RestTemplateUtil.getInstance().doPost(url, MediaType.APPLICATION_JSON, data);
-    			JSONObject resultJson = new JSONObject(result);
-    			if(resultJson.get("rtnCode").equals("00000")) {
-    				log.info(">>>>>>API RETURN OK!!!");
-    				crossCooperation.setCancelFlag("Y");
-    				entityManager.merge(crossCooperation);
-    			}
-        	}catch(Exception e) {
-        		failTotal = failTotal + 1;
-//        		entityManager.getTransaction().rollback();
-        		log.info(">>>>>>FAIL PROCESS ITEM:" + index);
-        	}
-        	successTotal = successTotal + 1;
+			try {
+				CrossCooperation crossCooperation = crossCooperationIterator.next();
+//				log.info(">>>>>>getCreateTimestamp:" + crossCooperation.getCreateTimestamp());
+//				log.info(">>>>>>getUserName:" + crossCooperation.getUserName());
+//				log.info(">>>>>>getCono:" + crossCooperation.getCono());
+//				log.info(">>>>>>getCancelFlag:" + crossCooperation.getCancelFlag());
+
+				Timestamp timestam = new Timestamp(Long.valueOf(crossCooperation.getCreateTimestamp()));
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				String format1 = simpleDateFormat.format(timestam);
+				log.info(">>>>>>format1:" + format1);
+
+				// 取得是否合法小時
+				boolean hoursflag = isValidHours(timestam, jobTimeStamp);
+
+				if (hoursflag) {
+					// 開始呼叫API
+					boolean apiflag = callShopeeApi(crossCooperation);
+					crossCooperation.setCancelFlag("Y");
+					crossCooperationService.saveOrUpdate(crossCooperation);
+				}
+			} catch (Exception e) {
+				failTotal = failTotal + 1;
+				log.info(">>>>>>FAIL PROCESS ITEM:" + index);
+			}
+			successTotal = successTotal + 1;
 			log.info(">>>>>>END PROCESS ITEM:" + index);
-        }
-		
+		}
+
 		log.info("***********");
-		log.info("成功:"+successTotal);
-		log.info("失敗:"+failTotal);
+		log.info("成功:" + successTotal);
+		log.info("失敗:" + failTotal);
 		log.info("***********");
-		
 		log.info("====EstoreShopeeJob.process() END====");
+
+	}
+
+	/*
+	 * 呼叫蝦皮API
+	 */
+	public boolean callShopeeApi(CrossCooperation crossCooperation) throws Exception {
+		Map<String, String> data = new HashMap<>();
+		data.put(">>>>>>orderSN", "201102VMWCUM1N");
+		data.put(">>>>>>status", "CNL24");
+		data.put(">>>>>>logistics", "HTC");
+		data.put(">>>>>>logisticsNo", "999999999");
+
+		String url = "http://10.64.33.156:48080/estore-api/shop/updateShopeeOrderStatus";
+//			   url = "http://localhost:5080/alexSpringBoot/products";
+		String result = RestTemplateUtil.getInstance().doPost(url, MediaType.APPLICATION_JSON, data);
+		JSONObject resultJson = new JSONObject(result);
+		if (resultJson.get("rtnCode").equals("00000")) {
+			log.info(">>>>>>API RETURN OK!!!");
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * 檢查是否超過時間
+	 */
+	public boolean isValidHours(Timestamp createTimestamp, Timestamp jobTimestamp) throws Exception {
+		long diff = (jobTimestamp.getTime() - createTimestamp.getTime());
+		long hours = diff / (1000 * 60 * 60);
+		if (hours > validHours) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public static void main(String[] args) {
