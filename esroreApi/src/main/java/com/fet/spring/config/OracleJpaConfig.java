@@ -26,10 +26,17 @@ public class OracleJpaConfig {
 		
 	//	System.out.println(oracleDriver);
 		
+//		OracleDataSource dataSource = new OracleDataSource();
+//		dataSource.setUser("es_dev");
+//		dataSource.setPassword("es_dev");
+//		dataSource.setURL("jdbc:oracle:thin:@10.64.70.99:1530:estoreT3");
+		
+		
 		OracleDataSource dataSource = new OracleDataSource();
-		dataSource.setUser("es_dev");
-		dataSource.setPassword("es_dev");
-		dataSource.setURL("jdbc:oracle:thin:@10.64.70.99:1530:estoreT3");
+		dataSource.setUser("system");
+		dataSource.setPassword("admin");
+		dataSource.setURL("jdbc:oracle:thin:@localhost:1521:orcl");
+		
 		dataSource.setImplicitCachingEnabled(true);
 		dataSource.setFastConnectionFailoverEnabled(true);
 		return dataSource;

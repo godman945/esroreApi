@@ -1,16 +1,33 @@
 package com.fet.alex;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import com.fet.db.oracle.service.Acc2giftLog.Acc2giftLogService;
+import com.fet.db.oracle.service.CrossCooperation.CrossCooperationService;
+import com.fet.db.oracle.service.CrossCooperation.ICrossCooperationService;
 import com.fet.spring.init.SpringbootWebApplication;
+
+
 
 
 
 @Component
 public class AlexTest {
+	
+	@Autowired
+	ICrossCooperationService crossCooperationService;
+	
+	
+	public void test() throws Exception{
+		crossCooperationService.alex();
+	} 
+	
 	public static void main(String[] args) {
 		try {
 			
@@ -24,16 +41,22 @@ public class AlexTest {
 //			System.out.println(dataSource.getConnection().isClosed());
 			ApplicationContext ctx = new SpringApplicationBuilder(SpringbootWebApplication.class).web(WebApplicationType.NONE).run(args);
 			AlexTest alexTest = ctx.getBean(AlexTest.class);
-			System.out.println(alexTest == null);
-//			
-//			
-//			
-//			
-//			
-			Acc2giftLogService acc2giftLogService = ctx.getBean(Acc2giftLogService.class);
-			System.out.println(acc2giftLogService == null);
+			alexTest.test();
 			
-			acc2giftLogService.alex();
+//			System.out.prin7	tln(alexTest == null);
+//			
+//			CrossCooperationService crossCooperationService = ctx.getBean(CrossCooperationService.class);
+//			System.out.println(crossCooperationService == null);
+//
+//			
+//			crossCooperationService.alex();
+			
+			
+//			System.out.println(ctx.getBean(EntityManager.class) == null);
+			
+			
+//			 List resultList = entityManager.createNativeQuery("select * from CROSS_COOPERATION").getResultList();
+//			 System.out.println("長度:"+resultList.size());
 			
 			
 //			Map<String, String> data = new HashMap<>();
