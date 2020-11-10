@@ -2,6 +2,7 @@ package com.fet.estore.shopee.job;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -23,13 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 //import com.fet.db.oracle.dao.CrossCooperation.CrossCooperationDAO;
 import com.fet.db.oracle.pojo.CrossCooperation;
 import com.fet.db.oracle.service.CrossCooperation.ICrossCooperationService;
+import com.fet.enumerate.EnumFetOrderStatus;
 import com.fet.soft.util.RestTemplateUtil;
 import com.fet.spring.init.SpringbootWebApplication;
 
 @Component
 public class EstoreShopeeJob {
-
-//	private static final Log log = LogFactory.getLog(EstoreShopeeJob.class);
 
 	private Logger log = LogManager.getLogger(getClass());
 
@@ -45,8 +45,12 @@ public class EstoreShopeeJob {
 	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	@Value("${shopee.valid.hours}")
-	private int validHours = 24;
+	private int validHours;
 
+	@Value("${alex.msg}")
+	private String alexMsg;
+	
+	
 	@Transactional
 	public void process() throws Exception {
 
@@ -55,64 +59,73 @@ public class EstoreShopeeJob {
 //			if(crossCooperation.getUserName().equals("TEST1")) {
 //				System.out.println(crossCooperation.getUserName());
 //				System.out.println(crossCooperation.getCancelFlag());
-//				
-//				
 ////				crossCooperation.setCancelFlag("A");
 ////				crossCooperationService.saveOrUpdate(crossCooperation);
 //			}
 //		}
-		if (true) {
-			return;
-		}
+//		if (true) {
+//			return;
+//		}
 
-		log.info("====EstoreShopeeJob.process() START====");
-		Timestamp jobTimeStamp = new Timestamp(System.currentTimeMillis());
+		try {
+			log.info("====EstoreShopeeJob.process() START====");
+			
+			log.info(">>>>>> env:"+alexMsg);
+			log.info(">>>>>> validHours:"+validHours);
+			
+			Timestamp jobTimeStamp = new Timestamp(System.currentTimeMillis());
 
-		List<CrossCooperation> crossCooperationList = crossCooperationService.findShopeeUpdateJobData();
+			List<CrossCooperation> crossCooperationList = crossCooperationService.findShopeeUpdateJobData();
 
-		Iterator<CrossCooperation> crossCooperationIterator = crossCooperationList.iterator();
-		int index = 0;
-		int successTotal = 0;
-		int failTotal = 0;
-		log.info(">>>>>總共需要處理筆數:" + crossCooperationList.size());
-		while (crossCooperationIterator.hasNext()) {
-			long startTime = System.currentTimeMillis();
-			index = index + 1;
-			log.info(">>>>>>START PROCESS ITEM:" + index);
-			try {
-				CrossCooperation crossCooperation = crossCooperationIterator.next();
-//				log.info(">>>>>>getCreateTimestamp:" + crossCooperation.getCreateTimestamp());
-//				log.info(">>>>>>getUserName:" + crossCooperation.getUserName());
-//				log.info(">>>>>>getCono:" + crossCooperation.getCono());
-//				log.info(">>>>>>getCancelFlag:" + crossCooperation.getCancelFlag());
+			Iterator<CrossCooperation> crossCooperationIterator = crossCooperationList.iterator();
+			int index = 0;
+			int successTotal = 0;
+			int failTotal = 0;
+			log.info(">>>>>total process size:" + crossCooperationList.size());
+			while (crossCooperationIterator.hasNext()) {
+				long startTime = System.currentTimeMillis();
+				index = index + 1;
+				log.info(">>>>>>START PROCESS ITEM:" + index);
+				try {
+					CrossCooperation crossCooperation = crossCooperationIterator.next();
+					log.info(">>>>>>getCreateTimestamp:" + crossCooperation.getCreateTimestamp());
+					log.info(">>>>>>getUserName:" + crossCooperation.getUserName());
+					log.info(">>>>>>getCono:" + crossCooperation.getCono());
+					log.info(">>>>>>getCancelFlag:" + crossCooperation.getCancelFlag());
 
-				Timestamp timestam = new Timestamp(Long.valueOf(crossCooperation.getCreateTimestamp()));
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String format1 = simpleDateFormat.format(timestam);
-				log.info(">>>>>>format1:" + format1);
+					Timestamp timestam = new Timestamp(Long.valueOf(crossCooperation.getCreateTimestamp()));
+					SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					String format1 = simpleDateFormat.format(timestam);
+					log.info(">>>>>>format1:" + format1);
 
-				// 取得是否合法小時
-				boolean hoursflag = isValidHours(timestam, jobTimeStamp);
+					// 取得是否合法小時
+					boolean hoursflag = isValidHours(timestam, jobTimeStamp);
 
-				if (hoursflag) {
-					// 開始呼叫API
-					boolean apiflag = callShopeeApi(crossCooperation);
-					crossCooperation.setCancelFlag("Y");
-					crossCooperationService.saveOrUpdate(crossCooperation);
+					if (hoursflag) {
+						// 開始呼叫API
+						boolean apiflag = callShopeeApi(crossCooperation);
+//						crossCooperation.setCancelFlag("Y");
+//						crossCooperationService.saveOrUpdate(crossCooperation);
+					}
+				} catch (Exception e) {
+					failTotal = failTotal + 1;
+					log.info(">>>>>>FAIL PROCESS ITEM:" + index);
 				}
-			} catch (Exception e) {
-				failTotal = failTotal + 1;
-				log.info(">>>>>>FAIL PROCESS ITEM:" + index);
+				successTotal = successTotal + 1;
+				log.info(">>>>>>END PROCESS ITEM:" + index);
 			}
-			successTotal = successTotal + 1;
-			log.info(">>>>>>END PROCESS ITEM:" + index);
-		}
 
-		log.info("***********");
-		log.info("成功:" + successTotal);
-		log.info("失敗:" + failTotal);
-		log.info("***********");
-		log.info("====EstoreShopeeJob.process() END====");
+			log.info("***********");
+			log.info(">>>>>>SUCCESS:" + successTotal);
+			log.info(">>>>>>FAIL:" + failTotal);
+			log.info("***********");
+			log.info("====EstoreShopeeJob.process() END====");
+		}catch (Exception e) {
+			e.printStackTrace();
+			log.error(e);
+		}
+		
+		
 
 	}
 
@@ -121,10 +134,10 @@ public class EstoreShopeeJob {
 	 */
 	public boolean callShopeeApi(CrossCooperation crossCooperation) throws Exception {
 		Map<String, String> data = new HashMap<>();
-		data.put(">>>>>>orderSN", "201102VMWCUM1N");
-		data.put(">>>>>>status", "CNL24");
-		data.put(">>>>>>logistics", "HTC");
-		data.put(">>>>>>logisticsNo", "999999999");
+		data.put("orderSN", crossCooperation.getOrderNo());
+		data.put("status", EnumFetOrderStatus.FET_CNL24.getType());
+		data.put("logistics", "");
+		data.put("logisticsNo", "");
 
 		String url = "http://10.64.33.156:48080/estore-api/shop/updateShopeeOrderStatus";
 //			   url = "http://localhost:5080/alexSpringBoot/products";
@@ -152,8 +165,7 @@ public class EstoreShopeeJob {
 
 	public static void main(String[] args) {
 		try {
-			ApplicationContext ctx = new SpringApplicationBuilder(SpringbootWebApplication.class)
-					.web(WebApplicationType.NONE).run(args);
+			ApplicationContext ctx = new SpringApplicationBuilder(SpringbootWebApplication.class).web(WebApplicationType.NONE).run(args);
 			EstoreShopeeJob estoreShopeeJob = ctx.getBean(EstoreShopeeJob.class);
 			estoreShopeeJob.process();
 		} catch (Exception e) {
