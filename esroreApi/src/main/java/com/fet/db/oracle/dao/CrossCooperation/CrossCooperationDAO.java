@@ -1,16 +1,12 @@
 package com.fet.db.oracle.dao.CrossCooperation;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.Query;
-import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
-import com.fet.db.oracle.dao.BaseDAO;
+import com.fet.db.oracle.dao.base.BaseDAO;
 import com.fet.db.oracle.pojo.CrossCooperation;
-import com.pchome.akbpfp.db.dao.board.IPfpBoardDAO;
-import com.pchome.akbpfp.db.pojo.PfpBoard;
 
 @Repository
 public class CrossCooperationDAO extends BaseDAO<CrossCooperation, String> implements ICrossCooperationDAO {
