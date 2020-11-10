@@ -107,6 +107,11 @@ public class EstoreShopeeJob {
 //						crossCooperation.setCancelFlag("Y");
 //						crossCooperationService.saveOrUpdate(crossCooperation);
 					}
+					
+					long endTime = System.currentTimeMillis();
+					
+					
+					log.info(">>>>>> ITEM COST SEC:"+(endTime - startTime) /1000 );
 				} catch (Exception e) {
 					failTotal = failTotal + 1;
 					log.info(">>>>>>FAIL PROCESS ITEM:" + index);
