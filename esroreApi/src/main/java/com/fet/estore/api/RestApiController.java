@@ -1,4 +1,4 @@
-package com.fet.estore.shopee.api;
+package com.fet.estore.api;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;

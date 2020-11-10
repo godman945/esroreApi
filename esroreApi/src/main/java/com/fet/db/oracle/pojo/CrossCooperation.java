@@ -1,5 +1,5 @@
 package com.fet.db.oracle.pojo;
-// Generated 2020/11/10 �U�� 01:25:20 by Hibernate Tools 5.2.12.Final
+// Generated 2020/11/10 �U�� 04:00:33 by Hibernate Tools 5.2.12.Final
 
 import java.util.Date;
 import javax.persistence.Column;
@@ -39,6 +39,7 @@ public class CrossCooperation implements java.io.Serializable {
 	private String modelId;
 	private String iaStatus;
 	private String coStatus;
+	private String orderStatus;
 
 	public CrossCooperation() {
 	}
@@ -53,7 +54,8 @@ public class CrossCooperation implements java.io.Serializable {
 	public CrossCooperation(String orderNo, String userName, String userMobile, String orderType, String msisdn,
 			String pcode, String onsaleName, String productName, String fetno, long productPrice, long prepayment,
 			long totalAmount, String cancelFlag, String smsUrl, String cono, Date createDate, String createTimestamp,
-			Date updateDate, String SOrderNo, String itemId, String modelId, String iaStatus, String coStatus) {
+			Date updateDate, String SOrderNo, String itemId, String modelId, String iaStatus, String coStatus,
+			String orderStatus) {
 		this.orderNo = orderNo;
 		this.userName = userName;
 		this.userMobile = userMobile;
@@ -77,6 +79,7 @@ public class CrossCooperation implements java.io.Serializable {
 		this.modelId = modelId;
 		this.iaStatus = iaStatus;
 		this.coStatus = coStatus;
+		this.orderStatus = orderStatus;
 	}
 
 	@Id
@@ -288,6 +291,15 @@ public class CrossCooperation implements java.io.Serializable {
 
 	public void setCoStatus(String coStatus) {
 		this.coStatus = coStatus;
+	}
+
+	@Column(name = "ORDER_STATUS", length = 2)
+	public String getOrderStatus() {
+		return this.orderStatus;
+	}
+
+	public void setOrderStatus(String orderStatus) {
+		this.orderStatus = orderStatus;
 	}
 
 }

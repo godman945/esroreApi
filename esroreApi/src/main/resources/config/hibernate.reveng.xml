@@ -11,5 +11,5 @@
  
  <hibernate-reverse-engineering>
 	<table-filter match-name="CROSS_COOPERATION"></table-filter>
-	<table-filter match-name="ACC2GIFT_LOG"></table-filter>
+	<table-filter match-name="CO_MASTER"></table-filter>
 </hibernate-reverse-engineering>

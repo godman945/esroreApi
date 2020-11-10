@@ -1,4 +1,4 @@
-package com.fet.estore.shopee.job;
+package com.fet.estore.job;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -68,10 +68,29 @@ public class EstoreShopeeJob {
 //		}
 
 		try {
-			log.info("====EstoreShopeeJob.process() START====");
+			log.info("========EstoreShopeeJob.process() START========");
 			
 			log.info(">>>>>> env:"+alexMsg);
 			log.info(">>>>>> validHours:"+validHours);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
 			
 			Timestamp jobTimeStamp = new Timestamp(System.currentTimeMillis());
 
@@ -79,7 +98,8 @@ public class EstoreShopeeJob {
 
 			Iterator<CrossCooperation> crossCooperationIterator = crossCooperationList.iterator();
 			int index = 0;
-			int successTotal = 0;
+			int processTotal = 0;
+			int notProcessTotal = 0;
 			int failTotal = 0;
 			log.info(">>>>>total process size:" + crossCooperationList.size());
 			while (crossCooperationIterator.hasNext()) {
@@ -104,27 +124,36 @@ public class EstoreShopeeJob {
 					if (hoursflag) {
 						// 開始呼叫API
 						boolean apiflag = callShopeeApi(crossCooperation);
-//						crossCooperation.setCancelFlag("Y");
-//						crossCooperationService.saveOrUpdate(crossCooperation);
+						crossCooperation.setCancelFlag("Y");
+						crossCooperationService.saveOrUpdate(crossCooperation);
+						
+						processTotal = processTotal + 1;
+					}
+					
+					//驗證用
+					else {
+						notProcessTotal = notProcessTotal + 1;
 					}
 					
 					long endTime = System.currentTimeMillis();
 					
 					
-					log.info(">>>>>> ITEM COST SEC:"+(endTime - startTime) /1000 );
+					log.info(">>>>>> ITEM COST MS:"+(endTime - startTime) );
 				} catch (Exception e) {
 					failTotal = failTotal + 1;
 					log.info(">>>>>>FAIL PROCESS ITEM:" + index);
 				}
-				successTotal = successTotal + 1;
+				
 				log.info(">>>>>>END PROCESS ITEM:" + index);
 			}
 
-			log.info("***********");
-			log.info(">>>>>>SUCCESS:" + successTotal);
-			log.info(">>>>>>FAIL:" + failTotal);
-			log.info("***********");
-			log.info("====EstoreShopeeJob.process() END====");
+			log.info("*********************");
+			log.info(">>>>>>TOTAL:"+crossCooperationList.size());
+			log.info(">>>>>>PROCESS TOTAL:" + processTotal);
+			log.info(">>>>>>NOT NEED PROCESS TOTAL:" + notProcessTotal);
+			log.info(">>>>>>FAIL TOTAL:" + failTotal);
+			log.info("*********************");
+			log.info("========EstoreShopeeJob.process() END========");
 		}catch (Exception e) {
 			e.printStackTrace();
 			log.error(e);
