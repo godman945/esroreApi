@@ -15,7 +15,7 @@ public abstract class BaseDAO<T, PK extends Serializable> extends HibernateDaoSu
 	private HibernateTemplate hibernateTemplate;
 
 	private Class<T> clazz;
- 
+
 	@SuppressWarnings("unchecked")
 	protected Class<T> getMyClass() {
 		if (clazz == null) {
@@ -23,7 +23,6 @@ public abstract class BaseDAO<T, PK extends Serializable> extends HibernateDaoSu
 		}
 		return clazz;
 	}
-
 
 	@Autowired
 	public void setSessionFactoryOverride(SessionFactory sessionFactory) {
@@ -44,6 +43,11 @@ public abstract class BaseDAO<T, PK extends Serializable> extends HibernateDaoSu
 	@Override
 	public List<T> loadAll() {
 		return hibernateTemplate.loadAll(getMyClass());
+	}
+
+	@Override
+	public void delete(T entity) {
+		hibernateTemplate.delete(entity);
 	}
 
 }

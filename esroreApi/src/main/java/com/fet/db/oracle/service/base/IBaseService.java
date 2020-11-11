@@ -10,4 +10,6 @@ public interface IBaseService<T, PK extends Serializable> {
 	public void saveOrUpdate(T entity);
 	
 	public List<T> loadAll();
+	
+	public void delete(T entity);
 }

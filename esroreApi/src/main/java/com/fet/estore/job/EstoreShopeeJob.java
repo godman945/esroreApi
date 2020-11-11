@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 //import com.fet.db.oracle.dao.CrossCooperation.CrossCooperationDAO;
 import com.fet.db.oracle.pojo.CrossCooperation;
-import com.fet.db.oracle.service.CrossCooperation.ICrossCooperationService;
+import com.fet.db.oracle.service.crossCooperation.ICrossCooperationService;
 import com.fet.enumerate.EnumFetOrderStatus;
 import com.fet.soft.util.RestTemplateUtil;
 import com.fet.spring.init.SpringbootWebApplication;
@@ -44,6 +44,8 @@ public class EstoreShopeeJob {
 
 	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+	private Timestamp jobTimeStamp = new Timestamp(System.currentTimeMillis());
+	
 	@Value("${shopee.valid.hours}")
 	private int validHours;
 
@@ -73,36 +75,71 @@ public class EstoreShopeeJob {
 			log.info(">>>>>> env:"+alexMsg);
 			log.info(">>>>>> validHours:"+validHours);
 			
+			//1.執行過時資料訂單取消API
+			processCancelOverTimeOrder();
 			
+			//2.執行CO_STATUS為BO,BD狀態且IA_STATUS不為C
+			processOrderStatusType();
 			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			Timestamp jobTimeStamp = new Timestamp(System.currentTimeMillis());
+			log.info("========EstoreShopeeJob.process() END========");
 
+		}catch (Exception e) {
+			e.printStackTrace();
+			log.error(e);
+		}
+		
+		
+
+	}
+
+	/**
+	 * 訂單成立傳送狀態
+	 * */
+	public void processOrderStatusType() {
+		try {
+			log.info(">>>>>> START");
+			List<String> coStatusList = new ArrayList<String>();
+			coStatusList.add(EnumFetOrderStatus.FET_BD.getType());
+			coStatusList.add(EnumFetOrderStatus.FET_BO.getType());
+			
+			Map<String,String> paramaterMap = new HashMap<String,String>();
+			
+			List<Map<String,String>> coStatusDataMapList = crossCooperationService.findOrderStatusByType(coStatusList);
+			Iterator<Map<String, String>> coStatusDataIterator = coStatusDataMapList.iterator();
+			while (coStatusDataIterator.hasNext()) {
+				paramaterMap.clear();
+				Map<String,String> resultData = coStatusDataIterator.next();
+				paramaterMap.put("orderSN", resultData.get("ORDER_NO"));
+				paramaterMap.put("status", resultData.get("CO_STATUS"));
+				paramaterMap.put("logistics", "");
+				paramaterMap.put("logisticsNo", "");
+				//呼叫API
+				callShopeeApi(paramaterMap);
+			}
+			log.info(">>>>>> END");
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 過時訂單取消狀態
+	 * */
+	public void processCancelOverTimeOrder() {
+		try {
+			log.info(">>>>>> START");
 			List<CrossCooperation> crossCooperationList = crossCooperationService.findShopeeUpdateJobData();
-
-			Iterator<CrossCooperation> crossCooperationIterator = crossCooperationList.iterator();
 			int index = 0;
 			int processTotal = 0;
 			int notProcessTotal = 0;
 			int failTotal = 0;
-			log.info(">>>>>total process size:" + crossCooperationList.size());
+			
+			Map<String,String> paramaterMap = new HashMap<String,String>();
+			
+			log.info(">>>>>>total process size:" + crossCooperationList.size());
+			Iterator<CrossCooperation> crossCooperationIterator = crossCooperationList.iterator();
 			while (crossCooperationIterator.hasNext()) {
+				paramaterMap.clear();
 				long startTime = System.currentTimeMillis();
 				index = index + 1;
 				log.info(">>>>>>START PROCESS ITEM:" + index);
@@ -123,11 +160,16 @@ public class EstoreShopeeJob {
 
 					if (hoursflag) {
 						// 開始呼叫API
-						boolean apiflag = callShopeeApi(crossCooperation);
-						crossCooperation.setCancelFlag("Y");
-						crossCooperationService.saveOrUpdate(crossCooperation);
-						
-						processTotal = processTotal + 1;
+						paramaterMap.put("orderSN", crossCooperation.getOrderNo());
+						paramaterMap.put("status", EnumFetOrderStatus.FET_CNL24.getType());
+						paramaterMap.put("logistics", "");
+						paramaterMap.put("logisticsNo", "");
+						boolean apiflag = callShopeeApi(paramaterMap);
+						if(apiflag) {
+							crossCooperation.setCancelFlag("Y");
+							crossCooperationService.saveOrUpdate(crossCooperation);
+							processTotal = processTotal + 1;
+						}
 					}
 					
 					//驗證用
@@ -136,49 +178,37 @@ public class EstoreShopeeJob {
 					}
 					
 					long endTime = System.currentTimeMillis();
-					
-					
-					log.info(">>>>>> ITEM COST MS:"+(endTime - startTime) );
+					log.info(">>>>>>ITEM COST MS:"+(endTime - startTime) );
 				} catch (Exception e) {
 					failTotal = failTotal + 1;
-					log.info(">>>>>>FAIL PROCESS ITEM:" + index);
+					log.info(">>>>>>FAIL PROCESS ITEM:");
 				}
-				
 				log.info(">>>>>>END PROCESS ITEM:" + index);
 			}
-
+			
+			
 			log.info("*********************");
 			log.info(">>>>>>TOTAL:"+crossCooperationList.size());
 			log.info(">>>>>>PROCESS TOTAL:" + processTotal);
 			log.info(">>>>>>NOT NEED PROCESS TOTAL:" + notProcessTotal);
 			log.info(">>>>>>FAIL TOTAL:" + failTotal);
 			log.info("*********************");
-			log.info("========EstoreShopeeJob.process() END========");
-		}catch (Exception e) {
+			
+			log.info(">>>>>> END");
+		}catch(Exception e) {
 			e.printStackTrace();
-			log.error(e);
 		}
-		
-		
-
 	}
-
+	
 	/*
 	 * 呼叫蝦皮API
 	 */
-	public boolean callShopeeApi(CrossCooperation crossCooperation) throws Exception {
-		Map<String, String> data = new HashMap<>();
-		data.put("orderSN", crossCooperation.getOrderNo());
-		data.put("status", EnumFetOrderStatus.FET_CNL24.getType());
-		data.put("logistics", "");
-		data.put("logisticsNo", "");
-
+	public boolean callShopeeApi(Map<String,String> paramaterMap) throws Exception {
 		String url = "http://10.64.33.156:48080/estore-api/shop/updateShopeeOrderStatus";
 //			   url = "http://localhost:5080/alexSpringBoot/products";
-		String result = RestTemplateUtil.getInstance().doPost(url, MediaType.APPLICATION_JSON, data);
+		String result = RestTemplateUtil.getInstance().doPost(url, MediaType.APPLICATION_JSON, paramaterMap);
 		JSONObject resultJson = new JSONObject(result);
 		if (resultJson.get("rtnCode").equals("00000")) {
-			log.info(">>>>>>API RETURN OK!!!");
 			return true;
 		}
 		return false;

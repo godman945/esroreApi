@@ -11,3 +11,22 @@ java -cp esroreApi.jar -Dloader.main=com.fet.estore.shopee.job.EstoreShopeeJob o
 1 如create_time 超過24小時(properties 設定) , cono 為空 ,cancel_flag 不為Y , 就 Call Allen 給的API ,給Shopee的 status 傳CNL24
 2 Call 成功後update cancel ='Y'
 
+
+#
+Create or replace trigger ALEX_TRIGGER_TEST
+after UPDATE on AALEX_TEST
+Declare
+    alex_cono VARCHAR2(20);
+    alex_cono_status VARCHAR2(20);
+    alex_ia_status VARCHAR2(20);
+Begin
+
+   select cono into alex_cono from AALEX_TEST;
+   select IA_STATUS into alex_ia_status from AALEX_TEST;
+   select cono_status into alex_cono_status from AALEX_TEST;
+ 
+     UPDATE AALEX_TRIGGER
+       SET IA_STATUS = alex_ia_status,CONO_STATUS = alex_cono_status
+    WHERE  CONO =alex_cono ;
+  
+End;

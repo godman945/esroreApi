@@ -13,4 +13,6 @@ public interface IBaseDAO<T, PK extends Serializable> {
 	public List<T> loadAll();
 	
 	public void saveOrUpdate(T entity);
+	
+	public void delete(T entity);
 }
