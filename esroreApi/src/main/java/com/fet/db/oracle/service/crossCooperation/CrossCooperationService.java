@@ -21,8 +21,8 @@ public class CrossCooperationService extends BaseService<CrossCooperation, Strin
 	}
 
 	@Override
-	public List<Map<String, String>> findOrderStatusByType(List<String> coStatusList) throws Exception {
-		return crossCooperationDAO.findOrderStatusByType(coStatusList);
+	public List<Map<String, String>> findCancelOrderDataStatus() throws Exception {
+		return crossCooperationDAO.findCancelOrderDataStatus();
 	}
 
 }

@@ -1,10 +1,9 @@
 package com.fet.alex;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.query.NativeQuery;
-import org.hibernate.transform.Transformers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -13,7 +12,11 @@ import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fet.db.oracle.dao.base.BaseDAO;
+import com.fet.db.oracle.dao.coMaster.ICoMasterDAO;
+import com.fet.db.oracle.pojo.CoMaster;
 import com.fet.db.oracle.pojo.CrossCooperation;
+import com.fet.db.oracle.service.coMaster.ICoMasterService;
 import com.fet.db.oracle.service.crossCooperation.ICrossCooperationService;
 import com.fet.spring.init.SpringbootWebApplication;
 
@@ -22,18 +25,104 @@ import com.fet.spring.init.SpringbootWebApplication;
 
 
 @Component
-public class AlexTest {
+public class AlexTest extends BaseDAO{
 	
-	@Autowired
-	private HibernateTemplate hibernateTemplate;
 	
 	@Autowired
 	private ICrossCooperationService crossCooperationService;
 	
+	@Autowired
+	private ICoMasterService coMasterService;
+	
+	@Autowired
+	private HibernateTemplate hibernateTemplate;
+	
+	
+	@Autowired
+	private ICoMasterDAO CoMasterDAO;
+	
 	@Transactional
 	public void test() throws Exception{
 		
+		//修改資料 START
+		CoMaster coMaster = coMasterService.get("TG201113000061S");
 		
+		Calendar rightNow = Calendar.getInstance();
+		rightNow.setTime(new Date());
+		rightNow.add(Calendar.DAY_OF_YEAR,-20);
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
+		System.out.println(sdf.format(rightNow.getTime()));
+		
+		coMaster.setActivationDate(rightNow.getTime());
+//		coMaster.setIaStatus("I");
+		
+//		CrossCooperation crossCooperation = crossCooperationService.get("ALEX-TEST2");
+//		crossCooperation
+//		crossCooperation.setOrderStatus("");
+		
+		
+//		CoMaster coMaster = coMasterService.get("TG201112000174S");
+//		coMaster.setIaStatus("D");
+		//修改資料 END
+		
+		//狀態D取消API START
+//		List<Map<String, String>> dataList = crossCooperationService.findCancelOrderDataStatus();
+		//狀態D取消API END
+		
+		
+		//超過24小時
+//		List<CrossCooperation> crossCooperation = crossCooperationService.findShopeeUpdateJobData();
+//		System.out.println(crossCooperation.size());
+		
+//		//發送狀態API START
+//		List<String> coStatusList = new ArrayList<String>();
+//		coStatusList.add(EnumFetOrderStatus.FET_TI.getType());
+//		coStatusList.add(EnumFetOrderStatus.FET_BD.getType());
+//		coStatusList.add(EnumFetOrderStatus.FET_BO.getType());
+//		coStatusList.add(EnumFetOrderStatus.FET_TGR.getType());
+//		List<Map<String, String>> dataList = coMasterService.findCoMasterOrderDataForApi(coStatusList);
+//		System.out.println(">>>>>>>>>>>"+dataList.size());
+//		for (Map<String, String> map : dataList) {
+//			if(map.get("ORDER_NO").equals("201111PY5N0VFR")
+//					|| map.get("ORDER_NO").equals("201111Q7M4M6TJ")
+//					|| map.get("ORDER_NO").equals("201111Q858YTBG")
+//					|| map.get("ORDER_NO").equals("201111Q8A85Q8T")) {
+//				
+//				
+//				CrossCooperation crossCooperation = crossCooperationService.get(map.get("ORDER_NO"));
+//				System.out.println(crossCooperation.getCono());
+//				System.out.println(crossCooperation.getOrderStatus());
+//				crossCooperation.setOrderStatus("");
+//				System.out.println("======");
+//				
+//			}
+//			
+//		}
+//		//發送狀態API END
+		
+		
+		
+		
+		
+		
+		
+		
+//		List<CrossCooperation> crossCooperationList = crossCooperationService.findShopeeUpdateJobData();
+//		for (CrossCooperation crossCooperation : crossCooperationList) {
+//			System.out.println(crossCooperation.getOrderNo());
+//		}
+		
+//		List<String> list = new ArrayList<String>();
+//		list.add(EnumFetOrderStatus.FET_TI.getType());
+//		list.add(EnumFetOrderStatus.FET_BD.getType());
+//		list.add(EnumFetOrderStatus.FET_BO.getType());
+//		list.add(EnumFetOrderStatus.FET_TGR.getType());
+//		List<Map<String, String>> dataList = coMasterService.findCoMasterOrderDataForApi(list);
+//		for (Map<String, String> map : dataList) {
+//			System.out.println(map);
+//		}
+//		System.out.println(dataList.size());
+	
 		
 //		CrossCooperation crossCooperation = new CrossCooperation();
 //		crossCooperation.setOrderNo("ALEX-TEST3");
@@ -44,13 +133,45 @@ public class AlexTest {
 ////		
 //		List<CrossCooperation> crossCooperationList = crossCooperationService.loadAll();
 //		for (CrossCooperation crossCooperationObj : crossCooperationList) {
-//			System.out.println(crossCooperationObj.getOrderNo());
-//			System.out.println(crossCooperationObj.getUserName());
-//			System.out.println(crossCooperationObj.getCono());
+//			int i = crossCooperationList.indexOf(crossCooperationObj);
+//			if(crossCooperationObj.getOrderNo().indexOf("ALEX")>= 0) {
+//				System.out.println(crossCooperationObj.getOrderNo());
+//				System.out.println(crossCooperationObj.getUserName());
+//				System.out.println(crossCooperationObj.getCono());
+//				
+//				if("ALEX-TEST3".equals(crossCooperationObj.getOrderNo())) {
+////					crossCooperationObj.setOrderStatus("BD");
+//					crossCooperationObj.setCancelFlag("Y");
+//				}
+////				CoMaster coMaster = coMasterService.get(crossCooperationObj.getCono());
+////				if("RG200114000034".equals(coMaster.getCono())) {
+////					coMaster.setCoStatus("BD");
+////					coMaster.setProviderName("HTC");
+////					coMaster.setShipmentNo("CCC");
+////				}
+////				crossCooperationObj.setCancelFlag("1");
+////				
+////				if(i==2) {
+////					List g = new ArrayList();
+////					
+////					g.get(10);
+////					
+////				}
+//			}
 //		}
 		
+//		ALEX-TEST
+//		alex_test@@
+//		TG191021810136M
+//		ALEX-TEST2
+//		alex_test
+//		TG191021810444M
+//		ALEX-TEST3
+//		alex_test
+//		RG200114000034
 		
-//		StringBuffer sql = new StringBuffer();
+		
+//		
 //		
 //		sql.append(" SELECT a.order_no, ");
 //		sql.append(" m.ia_status,  ");
@@ -70,7 +191,8 @@ public class AlexTest {
 //		
 //		
 ////		select c.cono from CROSS_COOPERATION c where 1=1 and (cono is not null and  cono !='null')
-////		sql.append(" select a.order_no,m.IA_STATUS,m.CO_STATUS from (  select c.order_no,c.cono from CROSS_COOPERATION c where 1=1 and (cono is not null and  cono !='null') )a,CO_MASTER m where 1=1 and a.cono = m.cono and m.CO_STATUS in('BO','BD') ");
+//		StringBuffer sql = new StringBuffer();
+//		sql.append(" select a.order_no,m.IA_STATUS,m.CO_STATUS from (  select c.order_no,c.cono from CROSS_COOPERATION c where 1=1 and (cono is not null and  cono !='null') )a,CO_MASTER m where 1=1 and a.cono = m.cono and m.CO_STATUS in('BO','BD') ");
 //		NativeQuery q = hibernateTemplate.getSessionFactory().getCurrentSession().createNativeQuery(sql.toString());
 //		q.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
 ////		

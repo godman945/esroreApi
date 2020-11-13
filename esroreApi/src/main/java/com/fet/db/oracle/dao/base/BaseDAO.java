@@ -6,13 +6,11 @@ import java.util.List;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate5.HibernateTemplate;
+import org.springframework.context.annotation.Primary;
 import org.springframework.orm.hibernate5.support.HibernateDaoSupport;
 
 public abstract class BaseDAO<T, PK extends Serializable> extends HibernateDaoSupport implements IBaseDAO<T, PK> {
 
-	@Autowired
-	private HibernateTemplate hibernateTemplate;
 
 	private Class<T> clazz;
 
@@ -28,26 +26,35 @@ public abstract class BaseDAO<T, PK extends Serializable> extends HibernateDaoSu
 	public void setSessionFactoryOverride(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
+	
+	public SessionFactory  getSessionFactoryOverride() {
+		return super.getSessionFactory();
+	}
+	
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public PK save(T entity) {
-		return (PK) hibernateTemplate.save(entity);
+		return (PK) super.getHibernateTemplate().save(entity);
 	}
 
 	@Override
 	public void saveOrUpdate(T entity) {
-		hibernateTemplate.saveOrUpdate(entity);
+		super.getHibernateTemplate().saveOrUpdate(entity);
 	}
 
 	@Override
 	public List<T> loadAll() {
-		return hibernateTemplate.loadAll(getMyClass());
+		return super.getHibernateTemplate().loadAll(getMyClass());
 	}
 
 	@Override
 	public void delete(T entity) {
-		hibernateTemplate.delete(entity);
+		super.getHibernateTemplate().delete(entity);
 	}
+	
+	public T get(Serializable id) {
+        return getHibernateTemplate().get(getMyClass(), id);
+    }
 
 }

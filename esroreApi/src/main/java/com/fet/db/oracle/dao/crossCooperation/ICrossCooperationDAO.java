@@ -10,5 +10,5 @@ public interface ICrossCooperationDAO extends IBaseDAO<CrossCooperation, String>
 
 	public List<CrossCooperation> findShopeeUpdateJobData() throws Exception;
 
-	public List<Map<String,String>> findOrderStatusByType(List<String> coStatusList) throws Exception;
+	public List<Map<String, String>> findCancelOrderDataStatus() throws Exception;
 }

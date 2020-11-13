@@ -12,48 +12,19 @@ java -cp esroreApi.jar -Dloader.main=com.fet.estore.shopee.job.EstoreShopeeJob o
 2 Call 成功後update cancel ='Y'
 
 
-#
-Create or replace trigger ALEX_TRIGGER_TEST
-after UPDATE on AALEX_TEST
-Declare
-    alex_cono VARCHAR2(20);
-    alex_cono_status VARCHAR2(20);
-    alex_ia_status VARCHAR2(20);
-Begin
-
-   select cono into alex_cono from AALEX_TEST;
-   select IA_STATUS into alex_ia_status from AALEX_TEST;
-   select cono_status into alex_cono_status from AALEX_TEST;
- 
-     UPDATE AALEX_TRIGGER
-       SET IA_STATUS = alex_ia_status,CONO_STATUS = alex_cono_status
-    WHERE  CONO =alex_cono ;
-  
-End;
-
-
-
+# trigger 寫法
 CREATE OR REPLACE TRIGGER ALEX_TRIGGER_TEST 
-after UPDATE ON AALEX_MASTER 
-
-Declare   
-   alex_cono VARCHAR2(20);
-   alex_cono_status VARCHAR2(20);
-   alex_ia_status VARCHAR2(20);
+AFTER UPDATE OF CONO_STATUS,IA_STATUS ON AALEX_MASTER 
+REFERENCING OLD AS OLD NEW AS NEW
+FOR EACH ROW
 BEGIN
- select cono into alex_cono from AALEX_MASTER;
- select cono_status into alex_cono_status from AALEX_MASTER;
- select ia_status into alex_ia_status from AALEX_MASTER;
-
-   select cono into alex_cono from AALEX_MASTER;
-   select cono_status into alex_cono_status from AALEX_MASTER;
-   select ia_status into alex_ia_status from AALEX_MASTER;
-   
-   
-    UPDATE AALEX_CROSSS_PROCATION
-       SET ia_status = alex_ia_status,cono_status = alex_cono_status
-    WHERE  cono =alex_cono;
-   
-  
+    UPDATE AALEX_CROCESS
+       SET ia_status = :NEW.ia_status,
+       cono_status =:NEW.cono_status
+    WHERE  cono = :NEW.cono;
 END;
+
+
+
+
  

@@ -23,14 +23,14 @@ public class RestTemplateUtil {
 	}
     
     public synchronized String doPost(String url,MediaType contentType,Map<String, String> parameter) throws Exception {
-    	log.info("START doPost PARAMETER:"+parameter);
+    	log.info(">>>>>> START doPost PARAMETER:"+parameter);
     	HttpHeaders headers = new HttpHeaders();
     	headers.setContentType(MediaType.APPLICATION_JSON);
     	headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
     	HttpEntity<Map<String, String>> entity = new HttpEntity<>(parameter, headers);
     	ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
     	long endTime = System.currentTimeMillis();
-    	log.info("END doPost RESULT:"+response.getBody().toString());
+    	log.info(">>>>>> END doPost RESULT:"+response.getBody().toString());
     	return response.getBody().toString();
     	
     }

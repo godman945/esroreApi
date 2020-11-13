@@ -12,4 +12,6 @@ public interface IBaseService<T, PK extends Serializable> {
 	public List<T> loadAll();
 	
 	public void delete(T entity);
+	
+	public T get(Serializable id);
 }
