@@ -65,12 +65,12 @@ public class EstoreShopeeJob {
 			log.info(">>>>>> validHours:"+validHours);
 			
 			//1.執行過時資料訂單取消API
-//			processCancelOverTimeOrder();
+			processCancelOverTimeOrder();
 			
-//			//2.訂單狀態為C 呼叫蝦皮取消訂單
-//			processCancelOrder();
-//			
-//			//3.執行CO_STATUS狀態且IA_STATUS不為C
+			//2.訂單狀態為C 呼叫蝦皮取消訂單
+			processCancelOrder();
+			
+			//3.執行CO_STATUS狀態且IA_STATUS不為C
 			processCoMasterOrdeForApi();
 			
 			log.info("========EstoreShopeeJob.process() END========");
@@ -81,10 +81,12 @@ public class EstoreShopeeJob {
 	}
 	
 	/**
-	 * 訂單狀態為C 呼叫蝦皮取消訂單
-	 * TGA狀態異動co_status,ia_status 無法異動到 CROSS_COOPERATION中co_status,ia_status
+	 * 1.CO_MASTER IA_STATUS為 D 且 CROSS_COOPERATION ORDER_STATUS不同IA_STATUS
+	 * 2.呼叫蝦皮取消訂單
+	 * TGA狀態異動CO_STATUS,IA_STATUS 無法異動到 CROSS_COOPERATION中CO_STATUS,IA_STATUS
 	 * */
 	public void processCancelOrder() {
+		Map<String,String> errResultData = null;
 		try {
 			log.info(">>>>>> START");
 			Map<String,String> paramaterMap = new HashMap<String,String>();
@@ -95,6 +97,9 @@ public class EstoreShopeeJob {
 			while (coStatusDataIterator.hasNext()) {
 				paramaterMap.clear();
 				Map<String,String> resultData = coStatusDataIterator.next();
+				errResultData = null;
+				errResultData = resultData;
+				
 				
 				String orderSN =  resultData.get("ORDER_NO");
 				String coStatus = EnumFetOrderStatus.FET_CNL.getType();
@@ -108,9 +113,13 @@ public class EstoreShopeeJob {
 				
 				boolean apiflag = callShopeeApi(paramaterMap);
 				if(apiflag) {
+					String masterCoStatus = StringUtils.isBlank(resultData.get("CO_MASTER_CO_STATUS")) || resultData.get("CO_MASTER_CO_STATUS").equals("null") ? "" :resultData.get("CO_MASTER_CO_STATUS");
+					String masterIaStatus = StringUtils.isBlank(resultData.get("CO_MASTER_IA_STATUS")) || resultData.get("CO_MASTER_IA_STATUS").equals("null") ? "" :resultData.get("CO_MASTER_IA_STATUS");
 					CrossCooperation crossCooperation = crossCooperationService.get(orderSN);
-					crossCooperation.setOrderStatus(EnumFetIaStatus.FET_D.getType());
 					crossCooperation.setCancelFlag("Y");
+					crossCooperation.setOrderStatus(EnumFetIaStatus.FET_D.getType());
+					crossCooperation.setCoStatus(masterCoStatus);
+					crossCooperation.setIaStatus(masterIaStatus);
 					crossCooperationService.saveOrUpdate(crossCooperation);
 				}else {
 					log.info(">>>>>> API FAIL POST DATA:"+paramaterMap);
@@ -118,6 +127,8 @@ public class EstoreShopeeJob {
 			}
 			log.info(">>>>>> END");
 		} catch (Exception e) {
+			log.error(">>>>>> PROCESS FAIL DATA:" + errResultData);
+			log.error(">>>>>> PROCESS FAIL:" + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -128,8 +139,10 @@ public class EstoreShopeeJob {
 	 * TGR,BCS狀態會與master co_status不同
 	 * */
 	public void processCoMasterOrdeForApi() {
+		Map<String,String> errResultData = null;
 		try {
 			log.info(">>>>>> START");
+			
 			List<String> coStatusList = new ArrayList<String>();
 			coStatusList.add(EnumFetOrderStatus.FET_BD.getType());
 			coStatusList.add(EnumFetOrderStatus.FET_BO.getType());
@@ -143,42 +156,57 @@ public class EstoreShopeeJob {
 			while (coStatusDataIterator.hasNext()) {
 				paramaterMap.clear();
 				Map<String,String> resultData = coStatusDataIterator.next();
+				errResultData = null;
+				errResultData = resultData;
+				
 				
 				String orderSN =  resultData.get("ORDER_NO");
-				String coStatus = StringUtils.isBlank(resultData.get("CO_STATUS")) || resultData.get("CO_STATUS").equals("null") ? "" :resultData.get("CO_STATUS");
-				String sendShopeeCostatus = StringUtils.isBlank(resultData.get("CO_STATUS")) || resultData.get("CO_STATUS").equals("null") ? "" :resultData.get("CO_STATUS");
+				String masterCoStatus = StringUtils.isBlank(resultData.get("MASTER_CO_STATUS")) || resultData.get("MASTER_CO_STATUS").equals("null") ? "" :resultData.get("MASTER_CO_STATUS");
+				String masterIaStatus = StringUtils.isBlank(resultData.get("MASTER_IA_STATUS")) || resultData.get("MASTER_IA_STATUS").equals("null") ? "" :resultData.get("MASTER_IA_STATUS");
 				String logistics = StringUtils.isBlank(resultData.get("PROVIDER_NAME")) || resultData.get("PROVIDER_NAME").equals("null") ? "" :resultData.get("PROVIDER_NAME");
 				String logisticsNo = StringUtils.isBlank(resultData.get("CS_STORE_NO")) || resultData.get("CS_STORE_NO").equals("null") ? "" :resultData.get("CS_STORE_NO");
-				String iaStatus = StringUtils.isBlank(resultData.get("IA_STATUS")) || resultData.get("IA_STATUS").equals("null") ? "" :resultData.get("IA_STATUS");
+				
+				
 				//狀態為BD時已有配送資料則送BCS
-				if(StringUtils.isNotBlank(logisticsNo) && coStatus.equals(EnumFetOrderStatus.FET_BD.getType())) {
-					sendShopeeCostatus = EnumFetOrderStatus.FET_BCS.getType();
+				if(masterCoStatus.equals(EnumFetOrderStatus.FET_BD.getType()) && StringUtils.isNotBlank(logisticsNo)) {
+					masterCoStatus = EnumFetOrderStatus.FET_BCS.getType();
 				}
 				//IA_STATUS狀態為D送TGR
-				if(iaStatus.equals(EnumFetIaStatus.FET_D.getType())) {
-					sendShopeeCostatus = EnumFetOrderStatus.FET_TGR.getType();
+				if(masterIaStatus.equals(EnumFetIaStatus.FET_D.getType())) {
+					masterCoStatus = EnumFetOrderStatus.FET_TGR.getType();
 				}
+				
+//				if(		orderSN.equals("201111PY5N0VFR")
+//						|| orderSN.equals("201111Q7M4M6TJ")
+//						|| orderSN.equals("201111Q858YTBG")
+//						|| orderSN.equals("201111Q8A85Q8T")
+//						|| orderSN.equals("ALEX-TEST2")
+//						
+//						|| orderSN.equals("ALEX-TEST")
+//						|| orderSN.equals("200520KTC726FT")
+//						|| orderSN.equals("201111Q7M4M6TJ")
+//						|| orderSN.equals("201111Q858YTBG")
+//						|| orderSN.equals("201111Q8A85Q8T")
+//						) {
+//					
+//				}else {
+//					continue;
+//				}
+				
 				
 				paramaterMap.put("orderSN", orderSN);
-				paramaterMap.put("status", sendShopeeCostatus);
+				paramaterMap.put("status", masterCoStatus);
 				paramaterMap.put("logistics", logistics);
 				paramaterMap.put("logisticsNo", logisticsNo);
-				
-				if(orderSN.equals("201111PY5N0VFR")
-						|| orderSN.equals("201111Q7M4M6TJ")
-						|| orderSN.equals("201111Q858YTBG")
-						|| orderSN.equals("201111Q8A85Q8T")
-						|| orderSN.equals("ALEX-TEST2")
-						) {
-					
-				}else {
-					continue;
-				}
 				
 				boolean apiflag = callShopeeApi(paramaterMap);
 				if(apiflag) {
 					CrossCooperation crossCooperation = crossCooperationService.get(orderSN);
-					crossCooperation.setOrderStatus(coStatus);
+					crossCooperation.setCancelFlag("");
+					crossCooperation.setOrderStatus(masterCoStatus);
+					crossCooperation.setIaStatus(masterIaStatus);
+					crossCooperation.setCoStatus(masterCoStatus);
+					
 					crossCooperationService.saveOrUpdate(crossCooperation);
 				}else {
 					log.info(">>>>>> API FAIL POST DATA:"+paramaterMap);
@@ -186,6 +214,8 @@ public class EstoreShopeeJob {
 			}
 			log.info(">>>>>> END");
 		}catch(Exception e) {
+			log.error(">>>>>> PROCESS FAIL DATA:" + errResultData);
+			log.error(">>>>>> PROCESS FAIL:" + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -196,7 +226,7 @@ public class EstoreShopeeJob {
 	public void processCancelOverTimeOrder() {
 		try {
 			log.info(">>>>>> START");
-			List<CrossCooperation> crossCooperationList = crossCooperationService.findShopeeUpdateJobData();
+			List<CrossCooperation> crossCooperationList = crossCooperationService.findShopeeCancelOverTimeData();
 			int index = 0;
 			int processTotal = 0;
 			int notProcessTotal = 0;
@@ -207,6 +237,7 @@ public class EstoreShopeeJob {
 			log.info(">>>>>>total process size:" + crossCooperationList.size());
 			Iterator<CrossCooperation> crossCooperationIterator = crossCooperationList.iterator();
 			while (crossCooperationIterator.hasNext()) {
+				
 				paramaterMap.clear();
 				long startTime = System.currentTimeMillis();
 				index = index + 1;
@@ -266,6 +297,7 @@ public class EstoreShopeeJob {
 			
 			log.info(">>>>>> END");
 		}catch(Exception e) {
+			log.error(e.getMessage());
 			e.printStackTrace();
 		}
 	}

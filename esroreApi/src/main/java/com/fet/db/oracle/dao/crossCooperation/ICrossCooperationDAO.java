@@ -8,7 +8,7 @@ import com.fet.db.oracle.pojo.CrossCooperation;
 
 public interface ICrossCooperationDAO extends IBaseDAO<CrossCooperation, String> {
 
-	public List<CrossCooperation> findShopeeUpdateJobData() throws Exception;
+	public List<CrossCooperation> findShopeeCancelOverTimeData() throws Exception;
 
 	public List<Map<String, String>> findCancelOrderDataStatus() throws Exception;
 }

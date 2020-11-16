@@ -1,8 +1,10 @@
 package com.fet.alex;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
@@ -18,6 +20,7 @@ import com.fet.db.oracle.pojo.CoMaster;
 import com.fet.db.oracle.pojo.CrossCooperation;
 import com.fet.db.oracle.service.coMaster.ICoMasterService;
 import com.fet.db.oracle.service.crossCooperation.ICrossCooperationService;
+import com.fet.enumerate.EnumFetOrderStatus;
 import com.fet.spring.init.SpringbootWebApplication;
 
 
@@ -44,16 +47,60 @@ public class AlexTest extends BaseDAO{
 	@Transactional
 	public void test() throws Exception{
 		
+		
+//		List<String> coStatusList = new ArrayList<String>();
+//		coStatusList.add(EnumFetOrderStatus.FET_TI.getType());
+//		coStatusList.add(EnumFetOrderStatus.FET_BD.getType());
+//		coStatusList.add(EnumFetOrderStatus.FET_BO.getType());
+//		coStatusList.add(EnumFetOrderStatus.FET_TGR.getType());
+//		List<Map<String, String>> dataList = coMasterService.findCoMasterOrderDataForApi(coStatusList);
+//		System.out.println(">>>>>>>>>>>"+dataList.size());
+		
 		//修改資料 START
-		CoMaster coMaster = coMasterService.get("TG201113000061S");
+//		List<CrossCooperation> crossCooperationList = crossCooperationService.loadAll();
+//		for (CrossCooperation crossCooperation : crossCooperationList) {
+//			
+//			if(
+//					"201111PY5N0VFR".equals(crossCooperation.getOrderNo()) 
+//					|| "201111Q7M4M6TJ".equals(crossCooperation.getOrderNo())
+//					|| "201111Q858YTBG".equals(crossCooperation.getOrderNo())
+//					|| "201111Q8A85Q8T".equals(crossCooperation.getOrderNo())
+//				) {
+//				crossCooperation.setOrderStatus("");
+//				
+//			}
+//			
+//		}
 		
-		Calendar rightNow = Calendar.getInstance();
-		rightNow.setTime(new Date());
-		rightNow.add(Calendar.DAY_OF_YEAR,-20);
-		SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-		System.out.println(sdf.format(rightNow.getTime()));
 		
-		coMaster.setActivationDate(rightNow.getTime());
+//		CoMaster coMaster = coMasterService.get("TG191021810136M");
+//		coMaster.setIaStatus("D");
+		List<CoMaster> coMasterList = coMasterService.loadAll();
+		for (CoMaster coMaster : coMasterList) {
+			
+			if(
+//				"TG201113000025S".equals(coMaster.getCono()) 
+//			    "TG201112000058S".equals(coMaster.getCono())||
+//			    "TG201112000021S".equals(coMaster.getCono())||
+			    "TG201111000170S".equals(coMaster.getCono())
+			) {
+			
+				coMaster.setCoStatus("TI");
+			}
+			
+		}
+		
+		
+		
+//		CoMaster coMaster = coMasterService.get("TG201113000061S");
+//		
+//		Calendar rightNow = Calendar.getInstance();
+//		rightNow.setTime(new Date());
+//		rightNow.add(Calendar.DAY_OF_YEAR,-20);
+//		SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
+//		System.out.println(sdf.format(rightNow.getTime()));
+//		
+//		coMaster.setActivationDate(rightNow.getTime());
 //		coMaster.setIaStatus("I");
 		
 //		CrossCooperation crossCooperation = crossCooperationService.get("ALEX-TEST2");

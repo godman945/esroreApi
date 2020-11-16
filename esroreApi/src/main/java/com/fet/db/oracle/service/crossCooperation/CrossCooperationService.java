@@ -16,8 +16,8 @@ public class CrossCooperationService extends BaseService<CrossCooperation, Strin
 	@Autowired
 	ICrossCooperationDAO crossCooperationDAO;
 
-	public List<CrossCooperation> findShopeeUpdateJobData() throws Exception {
-		return crossCooperationDAO.findShopeeUpdateJobData();
+	public List<CrossCooperation> findShopeeCancelOverTimeData() throws Exception {
+		return crossCooperationDAO.findShopeeCancelOverTimeData();
 	}
 
 	@Override
