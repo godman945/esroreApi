@@ -27,7 +27,8 @@ public class CoMasterDAO extends BaseDAO<CoMaster, String> implements ICoMasterD
 		sql.append(" 		m.PROVIDER_NAME, ");
 		sql.append("  		m.SHIPMENT_NO, ");
 		sql.append("  		m.CS_STORE_NO, ");
-		sql.append("  		m.CS_STORE_NAME ");
+		sql.append("  		m.CS_STORE_NAME, ");
+		sql.append("  		TO_CHAR(a.UPDATE_DATE,'yyyy-mm-dd hh24:mm ss')UPDATE_DATE ");
 		sql.append(" FROM ");
 		sql.append(" (	SELECT 	c.CONO, ");
 		sql.append("  			c.USER_NAME, ");
@@ -35,7 +36,8 @@ public class CoMasterDAO extends BaseDAO<CoMaster, String> implements ICoMasterD
 		sql.append("  			c.ORDER_NO, ");
 		sql.append("  			c.ORDER_STATUS, ");
 		sql.append("  			c.IA_STATUS, ");
-		sql.append(" 			c.CO_STATUS ");
+		sql.append(" 			c.CO_STATUS, ");
+		sql.append(" 			c.UPDATE_DATE ");
 		sql.append(" FROM cross_cooperation c ");
 		sql.append(" WHERE 1=1 ");
 		sql.append("	AND c.CONO IS NOT NULL ");
@@ -46,7 +48,8 @@ public class CoMasterDAO extends BaseDAO<CoMaster, String> implements ICoMasterD
 		sql.append("  	AND m.CONO=a.CONO ");
 		sql.append(" 	AND NVL(m.IA_STATUS, ' ') <> 'C' ");
 		sql.append(" 	AND m.CO_STATUS in(:coStatusList) ");
-		sql.append(" 	AND NVL(a.order_status, ' ') <> a.CO_STATUS ");
+		sql.append(" 	AND NVL(a.CO_STATUS, ' ') <>  m.CO_STATUS  ");
+		
 		
 		NativeQuery query = super.getHibernateTemplate().getSessionFactory().getCurrentSession().createNativeQuery(sql.toString());
 		query.setParameterList("coStatusList", coStatusList);

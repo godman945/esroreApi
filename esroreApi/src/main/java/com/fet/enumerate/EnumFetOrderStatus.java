@@ -7,6 +7,7 @@ public enum EnumFetOrderStatus {
 	FET_BD("BD","物流配送中"),
 	FET_BCS("BCS","超商配送中"),
 	FET_TGR("TGR","門號已開通"),
+	FET_TGA("TGA","訂單確認完成"),
 	FET_CNL("CNL","取消訂單(退貨退款處理中)"),
 	FET_CNL24("CNL24","取消訂單(24H未填URL)");
 		

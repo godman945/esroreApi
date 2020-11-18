@@ -16,6 +16,7 @@ public class RestTemplateUtil {
     private static final Log log = LogFactory.getLog(RestTemplateUtil.class);
     
     private static RestTemplateUtil restTemplateUtil = new RestTemplateUtil();
+    
     private RestTemplate restTemplate;
 	
     public static RestTemplateUtil getInstance() {

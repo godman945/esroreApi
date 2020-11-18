@@ -6,8 +6,8 @@
         </Console>
         
         
-        <RollingRandomAccessFile name="Appender" immediateFlush="true" fileName="/wls/ESTAD_projects/batch/logs/esroreApi/esroreApi.log"
-			filePattern="/wls/ESTAD_projects/batch/log/esroreApi/esroreApi.%d{yyyy-MM-dd}.log.gz">
+        <RollingRandomAccessFile name="Appender" immediateFlush="true" fileName="/wls/ESTAD_projects/batch/logs/estoreApi/estoreApi.log"
+			filePattern="/wls/ESTAD_projects/batch/logs/estoreApi/estoreApi.%d{yyyy-MM-dd}.log.gz">
 			<PatternLayout>
 				<pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%class{36}]%M(%L) %msg%xEx%n</pattern>
 			</PatternLayout>
@@ -19,8 +19,10 @@
     
     <loggers>
         <root level="info" >
-            <appender-ref ref="Appender" />
+            <AppenderRef ref="Appender" />  
         	<appender-ref ref="Console" />
+        	
+        	
         </root>
     </loggers>
 </configuration>

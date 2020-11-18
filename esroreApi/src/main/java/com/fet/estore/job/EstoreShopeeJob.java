@@ -3,6 +3,7 @@ package com.fet.estore.job;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -11,7 +12,6 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.SessionFactory;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,8 +36,6 @@ public class EstoreShopeeJob {
 
 	private Logger log = LogManager.getLogger(getClass());
 
-	@Autowired
-	SessionFactory sessionFactory;
 
 	@Autowired
 	ICrossCooperationService crossCooperationService;
@@ -45,23 +43,20 @@ public class EstoreShopeeJob {
 	@Autowired
 	private ICoMasterService coMasterService;
 
-	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
 	private Timestamp jobTimeStamp = new Timestamp(System.currentTimeMillis());
 	
 	@Value("${shopee.valid.hours}")
 	private int validHours;
-
-	@Value("${alex.msg}")
-	private String alexMsg;
 	
+	@Value("${spring.profiles.active}")
+	private String activeEnv;
 	
 	@Transactional
 	public void process() throws Exception {
 		try {
 			log.info("========EstoreShopeeJob.process() START========");
 			
-			log.info(">>>>>> env:"+alexMsg);
+			log.info(">>>>>> env:"+activeEnv);
 			log.info(">>>>>> validHours:"+validHours);
 			
 			//1.執行過時資料訂單取消API
@@ -89,6 +84,8 @@ public class EstoreShopeeJob {
 		Map<String,String> errResultData = null;
 		try {
 			log.info(">>>>>> START");
+			Date date = new Date();
+			
 			Map<String,String> paramaterMap = new HashMap<String,String>();
 			
 			List<Map<String, String>> dataList = crossCooperationService.findCancelOrderDataStatus();
@@ -118,6 +115,7 @@ public class EstoreShopeeJob {
 					CrossCooperation crossCooperation = crossCooperationService.get(orderSN);
 					crossCooperation.setCancelFlag("Y");
 					crossCooperation.setOrderStatus(EnumFetIaStatus.FET_D.getType());
+					crossCooperation.setUpdateDate(date);
 					crossCooperation.setCoStatus(masterCoStatus);
 					crossCooperation.setIaStatus(masterIaStatus);
 					crossCooperationService.saveOrUpdate(crossCooperation);
@@ -137,6 +135,10 @@ public class EstoreShopeeJob {
 	/**
 	 * 訂單成立後呼叫蝦皮API傳送狀態
 	 * TGR,BCS狀態會與master co_status不同
+	 * 
+	 * 發送shopee狀態記錄在co_status
+	 * 訂單狀態維護在order_status用來比對co_master是否異動
+	 * 
 	 * */
 	public void processCoMasterOrdeForApi() {
 		Map<String,String> errResultData = null;
@@ -148,7 +150,9 @@ public class EstoreShopeeJob {
 			coStatusList.add(EnumFetOrderStatus.FET_BO.getType());
 			coStatusList.add(EnumFetOrderStatus.FET_TI.getType());
 			coStatusList.add(EnumFetOrderStatus.FET_TGR.getType());
+			coStatusList.add(EnumFetOrderStatus.FET_TGA.getType());
 			Map<String,String> paramaterMap = new HashMap<String,String>();
+			Date date = new Date();
 			
 			List<Map<String,String>> coStatusDataMapList = coMasterService.findCoMasterOrderDataForApi(coStatusList);
 
@@ -163,39 +167,41 @@ public class EstoreShopeeJob {
 				String orderSN =  resultData.get("ORDER_NO");
 				String masterCoStatus = StringUtils.isBlank(resultData.get("MASTER_CO_STATUS")) || resultData.get("MASTER_CO_STATUS").equals("null") ? "" :resultData.get("MASTER_CO_STATUS");
 				String masterIaStatus = StringUtils.isBlank(resultData.get("MASTER_IA_STATUS")) || resultData.get("MASTER_IA_STATUS").equals("null") ? "" :resultData.get("MASTER_IA_STATUS");
+				String crossCooperationCoStatus = StringUtils.isBlank(resultData.get("CROSS_COOPERATION_CO_STATUS")) || resultData.get("CROSS_COOPERATION_CO_STATUS").equals("null") ? "" :resultData.get("CROSS_COOPERATION_CO_STATUS");
 				String logistics = StringUtils.isBlank(resultData.get("PROVIDER_NAME")) || resultData.get("PROVIDER_NAME").equals("null") ? "" :resultData.get("PROVIDER_NAME");
-				String logisticsNo = StringUtils.isBlank(resultData.get("CS_STORE_NO")) || resultData.get("CS_STORE_NO").equals("null") ? "" :resultData.get("CS_STORE_NO");
+				String logisticsNo = StringUtils.isBlank(resultData.get("SHIPMENT_NO")) || resultData.get("SHIPMENT_NO").equals("null") ? "" :resultData.get("SHIPMENT_NO");
+				String csStoreNo = StringUtils.isBlank(resultData.get("CS_STORE_NO")) || resultData.get("CS_STORE_NO").equals("null") ? "" :resultData.get("CS_STORE_NO");
+				String orderStatus = StringUtils.isBlank(resultData.get("MASTER_CO_STATUS")) || resultData.get("MASTER_CO_STATUS").equals("null") ? "" :resultData.get("MASTER_CO_STATUS");
+				
 				
 				
 				//狀態為BD時已有配送資料則送BCS
-				if(masterCoStatus.equals(EnumFetOrderStatus.FET_BD.getType()) && StringUtils.isNotBlank(logisticsNo)) {
-					masterCoStatus = EnumFetOrderStatus.FET_BCS.getType();
+				if(masterCoStatus.equals(EnumFetOrderStatus.FET_BD.getType()) && StringUtils.isNotBlank(csStoreNo)) {
+					orderStatus = EnumFetOrderStatus.FET_BCS.getType();
 				}
 				//IA_STATUS狀態為D送TGR
 				if(masterIaStatus.equals(EnumFetIaStatus.FET_D.getType())) {
-					masterCoStatus = EnumFetOrderStatus.FET_TGR.getType();
+					orderStatus = EnumFetOrderStatus.FET_TGR.getType();
 				}
 				
-//				if(		orderSN.equals("201111PY5N0VFR")
-//						|| orderSN.equals("201111Q7M4M6TJ")
-//						|| orderSN.equals("201111Q858YTBG")
-//						|| orderSN.equals("201111Q8A85Q8T")
-//						|| orderSN.equals("ALEX-TEST2")
-//						
-//						|| orderSN.equals("ALEX-TEST")
-//						|| orderSN.equals("200520KTC726FT")
-//						|| orderSN.equals("201111Q7M4M6TJ")
-//						|| orderSN.equals("201111Q858YTBG")
-//						|| orderSN.equals("201111Q8A85Q8T")
-//						) {
-//					
-//				}else {
-//					continue;
-//				}
+				//CO_STATUS狀態為TGA送TI
+				if(masterCoStatus.equals(EnumFetOrderStatus.FET_TGA.getType())) {
+					orderStatus = EnumFetOrderStatus.FET_TI.getType();
+				}
 				
+				//判斷是否已經發送過TI
+				if(crossCooperationCoStatus.equals(EnumFetOrderStatus.FET_TI.getType()) && masterCoStatus.equals(EnumFetOrderStatus.FET_TGA.getType())){
+					CrossCooperation crossCooperation = crossCooperationService.get(orderSN);
+					crossCooperation.setCancelFlag("");
+					crossCooperation.setOrderStatus(orderStatus);
+					crossCooperation.setCoStatus(masterCoStatus);
+					crossCooperation.setIaStatus(masterIaStatus);
+					crossCooperation.setUpdateDate(date);
+					continue;
+				}
 				
 				paramaterMap.put("orderSN", orderSN);
-				paramaterMap.put("status", masterCoStatus);
+				paramaterMap.put("status", orderStatus);
 				paramaterMap.put("logistics", logistics);
 				paramaterMap.put("logisticsNo", logisticsNo);
 				
@@ -203,11 +209,10 @@ public class EstoreShopeeJob {
 				if(apiflag) {
 					CrossCooperation crossCooperation = crossCooperationService.get(orderSN);
 					crossCooperation.setCancelFlag("");
-					crossCooperation.setOrderStatus(masterCoStatus);
-					crossCooperation.setIaStatus(masterIaStatus);
+					crossCooperation.setOrderStatus(orderStatus);
 					crossCooperation.setCoStatus(masterCoStatus);
-					
-					crossCooperationService.saveOrUpdate(crossCooperation);
+					crossCooperation.setIaStatus(masterIaStatus);
+					crossCooperation.setUpdateDate(date);
 				}else {
 					log.info(">>>>>> API FAIL POST DATA:"+paramaterMap);
 				}
@@ -265,7 +270,8 @@ public class EstoreShopeeJob {
 							boolean apiflag = callShopeeApi(paramaterMap);
 							if(apiflag) {
 								crossCooperation.setCancelFlag("Y");
-								crossCooperation.setCoStatus(EnumFetOrderStatus.FET_CNL24.getType());
+								crossCooperation.setOrderStatus(EnumFetOrderStatus.FET_CNL24.getType());
+								crossCooperation.setUpdateDate(new Date());
 								crossCooperationService.saveOrUpdate(crossCooperation);
 								processTotal = processTotal + 1;
 							}else {
@@ -282,7 +288,7 @@ public class EstoreShopeeJob {
 					log.info(">>>>>>ITEM COST MS:"+(endTime - startTime) );
 				} catch (Exception e) {
 					failTotal = failTotal + 1;
-					log.info(">>>>>>FAIL PROCESS ITEM:");
+					log.error(">>>>>>FAIL PROCESS:"+e.getMessage());
 				}
 				log.info(">>>>>>END PROCESS ITEM:" + index);
 			}

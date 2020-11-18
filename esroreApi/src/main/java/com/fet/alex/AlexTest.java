@@ -1,11 +1,12 @@
 package com.fet.alex;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -17,14 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fet.db.oracle.dao.base.BaseDAO;
 import com.fet.db.oracle.dao.coMaster.ICoMasterDAO;
 import com.fet.db.oracle.pojo.CoMaster;
-import com.fet.db.oracle.pojo.CrossCooperation;
 import com.fet.db.oracle.service.coMaster.ICoMasterService;
 import com.fet.db.oracle.service.crossCooperation.ICrossCooperationService;
-import com.fet.enumerate.EnumFetOrderStatus;
+import com.fet.enumerate.EnumFetShopeeDalityReportColumn;
 import com.fet.spring.init.SpringbootWebApplication;
-
-
-
 
 
 @Component
@@ -44,8 +41,21 @@ public class AlexTest extends BaseDAO{
 	@Autowired
 	private ICoMasterDAO CoMasterDAO;
 	
+	private Logger log = LogManager.getLogger(getClass());
+
+	private SimpleDateFormat sdf = new SimpleDateFormat("YYYY-mm-dd");
+	
 	@Transactional
 	public void test() throws Exception{
+		
+		
+		
+		Calendar can = Calendar.getInstance();
+		can.setTime(sdf.parse("2020-05-22"));
+		
+		
+		CoMaster coMaster = coMasterService.get("TG201117000325S");
+		coMaster.setActivationDate(can.getTime());
 		
 		
 //		List<String> coStatusList = new ArrayList<String>();
@@ -65,6 +75,8 @@ public class AlexTest extends BaseDAO{
 //					|| "201111Q7M4M6TJ".equals(crossCooperation.getOrderNo())
 //					|| "201111Q858YTBG".equals(crossCooperation.getOrderNo())
 //					|| "201111Q8A85Q8T".equals(crossCooperation.getOrderNo())
+//					|| "200520KTC726FT".equals(crossCooperation.getOrderNo())
+//					
 //				) {
 //				crossCooperation.setOrderStatus("");
 //				
@@ -75,20 +87,20 @@ public class AlexTest extends BaseDAO{
 		
 //		CoMaster coMaster = coMasterService.get("TG191021810136M");
 //		coMaster.setIaStatus("D");
-		List<CoMaster> coMasterList = coMasterService.loadAll();
-		for (CoMaster coMaster : coMasterList) {
-			
-			if(
-//				"TG201113000025S".equals(coMaster.getCono()) 
-//			    "TG201112000058S".equals(coMaster.getCono())||
-//			    "TG201112000021S".equals(coMaster.getCono())||
-			    "TG201111000170S".equals(coMaster.getCono())
-			) {
-			
-				coMaster.setCoStatus("TI");
-			}
-			
-		}
+//		List<CoMaster> coMasterList = coMasterService.loadAll();
+//		for (CoMaster coMaster : coMasterList) {
+//			
+//			if(
+////				"TG201113000025S".equals(coMaster.getCono()) 
+////			    "TG201112000058S".equals(coMaster.getCono())||
+////			    "TG201112000021S".equals(coMaster.getCono())||
+//			    "TG201111000170S".equals(coMaster.getCono())
+//			) {
+//			
+//				coMaster.setCoStatus("TI");
+//			}
+//			
+//		}
 		
 		
 		
@@ -275,11 +287,186 @@ public class AlexTest extends BaseDAO{
 //		
 	} 
 	
+	
+	public void sendEmail() throws Exception{
+		
+		
+		String [] tests = {"ALEX","NICO","TEST"};
+		JSONArray array = new JSONArray();
+		for (String string : tests) {
+			JSONObject json = new JSONObject();
+			for (int j = 0; j < 3; j++) {
+				json.put(string+"_"+j, "value_"+j);
+			}
+			array.put(json);
+		}
+		
+		
+		SimpleDateFormat dformat = new SimpleDateFormat("yyyyMMddhhmmss");
+		String filename = "每日花費成效報表_" + dformat.format(new Date()) + ".csv";
+
+		StringBuilder content = new StringBuilder();
+		content.append("帳戶," + "ALEX");
+		content.append("\n\n");
+
+		int index = 0;
+		for (EnumFetShopeeDalityReportColumn enumFetShopeeDalityReportColumn : EnumFetShopeeDalityReportColumn.values()) {
+			index = index + 1;
+			if(index == 0){
+				content.append(enumFetShopeeDalityReportColumn.getColumn());
+			}else{
+				content.append(",").append(enumFetShopeeDalityReportColumn.getColumn());
+			}
+		}
+		
+		
+		content.append("\n");
+		for (Object object : array) {
+			JSONObject dataJson = (JSONObject) object;
+			
+			index = 0;
+			for (EnumFetShopeeDalityReportColumn enumFetShopeeDalityReportColumn : EnumFetShopeeDalityReportColumn.values()) {
+				if(index == 0){
+					content.append(dataJson.get(enumFetShopeeDalityReportColumn.getColumn()));
+				}else{
+					content.append(",").append(dataJson.get(enumFetShopeeDalityReportColumn.getColumn()));
+				}
+				index = index + 1;
+			}
+			content.append("\n");
+			
+			
+			
+			
+			
+		}
+		
+		
+		System.out.println(content);
+		
+		
+		
+		
+//		Properties props = System.getProperties();
+//		props.put("mail.host", "10.68.77.40");
+//		props.put("mail.transport.protocol", "smtp");
+//		Session session = Session.getDefaultInstance(props);
+//		//送,收件人
+//		InternetAddress from = new InternetAddress("alexchen3@fareastone.com.tw");
+//		InternetAddress to = new InternetAddress("alexchen3@fareastone.com.tw");
+//		//訊息(信件)
+//		Message message = new MimeMessage(session);
+//		message.setFrom(from);
+//		message.setRecipient(RecipientType.TO, to);
+//		message.setSubject("測試發信");
+//		
+//		 Multipart multipart = new MimeMultipart();
+//
+//		 
+//		 BodyPart messageBodyPart = new MimeBodyPart();
+//		 messageBodyPart.setText("請按下方超連結以完成E-mail驗證");
+//		 multipart.addBodyPart(messageBodyPart);
+//		 
+//		 
+//		 
+//		 
+//		 MimeBodyPart attachFilePart = new MimeBodyPart();
+//		 attachFilePart.addHeader("Content-Type", "application/octet-stream; charset=\"utf-8\" "); 
+//		 
+//		 
+//		 
+////		 new ByteArrayInputStream(content.toString().getBytes("big5"))
+//		 attachFilePart.setDataHandler(new DataHandler(new ByteArrayDataSource(new ByteArrayInputStream(content.toString().getBytes("big5")),"text/csv")));
+//		 attachFilePart.setFileName(filename);
+//		 multipart.addBodyPart(attachFilePart);
+//		 
+//		 
+//		 
+//		 message.setContent(multipart);
+//         Transport.send(message);
+		 
+		 
+		
+//		 messageBodyPart = new MimeBodyPart();
+//         DataSource source = new FileDataSource(filename);
+//         messageBodyPart.setDataHandler(new DataHandler(source));
+//         messageBodyPart.setFileName(filename);
+//         multipart.addBodyPart(messageBodyPart);
+		
+         
+		 
+//		  MimeBodyPart attachementBodyPart = new MimeBodyPart();
+//		  URL attachmentUrl = getAttachemntURL(attachment);
+//		  String contentType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(attachmentUrl.getFile());
+//		  attachementBodyPart.setDataHandler(new DataHandler(new ByteArrayDataSource( attachmentUrl.openStream(), contentType ) ));
+//		  String fileName = new File(attachmentUrl.getFile()).getName();
+//		  attachementBodyPart.setFileName(fileName);
+		 
+		 
+		 
+		
+		
+		
+		
+		
+	}
+	
 	public static void main(String[] args) {
 		try {
+			
+			
+//			 XSSFWorkbook workbook = new XSSFWorkbook();
+//			 XSSFSheet sheet = workbook.createSheet("Java Books");
+//		         
+//		        Object[][] bookData = {
+//		                {"王大天", "Kathy Serria", 79},
+//		                {"Effective Java", "Joshua Bloch", 36},
+//		                {"Clean Code", "Robert martin", 42},
+//		                {"Thinking in Java", "Bruce Eckel", 35},
+//		        };
+//		 
+//		        int rowCount = 0;
+//		         
+//		        for (Object[] aBook : bookData) {
+//		            Row row = sheet.createRow(++rowCount);
+//		             
+//		            int columnCount = 0;
+//		             
+//		            for (Object field : aBook) {
+//		                Cell cell = row.createCell(++columnCount);
+//		                if (field instanceof String) {
+//		                    cell.setCellValue((String) field);
+//		                } else if (field instanceof Integer) {
+//		                    cell.setCellValue((Integer) field);
+//		                }
+//		            }
+//		             
+//		        }
+//		         
+//		         
+//		        try (FileOutputStream outputStream = new FileOutputStream("JavaBooks.xlsx")) {
+//		            workbook.write(outputStream);
+//		        }
+//			
+			
+			
+			
+			
+			
+			
 			ApplicationContext ctx = new SpringApplicationBuilder(SpringbootWebApplication.class).web(WebApplicationType.NONE).run(args);
 			AlexTest alexTest = ctx.getBean(AlexTest.class);
 			alexTest.test();
+//			alexTest.sendEmail();
+			
+			
+//			StringBuilder content = new StringBuilder();
+//			String alex=null;
+//			
+//			System.out.println(String.valueOf(alex));
+			
+//			content.append(",").append(alex);
+//			System.out.println(content);
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
