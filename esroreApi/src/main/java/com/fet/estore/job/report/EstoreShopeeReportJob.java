@@ -53,7 +53,7 @@ public class EstoreShopeeReportJob {
 			log.info(">>>>>> env:"+activeEnv);
 			log.info(">>>>>> dailyReporDay:"+dailyReporDay);
 			
-			List<List<String>> returnDataList = crossCooperationReportService.findShopeeDailyReport();
+			List<List<String>> returnDataList = crossCooperationReportService.findShopeeDailyReport(dailyReporDay);
 			
 			
 			String year = DateUtil.getInstance().getYear();

@@ -13,7 +13,7 @@ import com.fet.db.oracle.dao.base.BaseDAO;
 public class CrossCooperationReportDAO extends BaseDAO<Object, String> implements ICrossCooperationReportDAO {
 
 	@Override
-	public List<Map<String,String>> findShopeeDailyReport() throws Exception {
+	public List<Map<String,String>> findShopeeDailyReport(int days) throws Exception {
 		StringBuffer sql = new StringBuffer();
 		sql.append(" SELECT ");
 		sql.append(" a.order_no, ");
@@ -141,9 +141,11 @@ public class CrossCooperationReportDAO extends BaseDAO<Object, String> implement
 		sql.append("  CO_MASTER m ");
 		sql.append(" WHERE 1 = 1 ");
 		sql.append(" AND m.cono = a.cono ");
-		sql.append(" AND TO_CHAR(m.co_date, 'yyyy-mm-dd') >= TO_CHAR(sysdate - 30, 'yyyy-mm-dd') ");
+		sql.append(" AND TO_CHAR(m.co_date, 'yyyy-mm-dd') >= TO_CHAR(sysdate - :days, 'yyyy-mm-dd') ");
 		sql.append(" ORDER BY m.co_date DESC ");
 		Query query = super.getHibernateTemplate().getSessionFactory().getCurrentSession().createNativeQuery(sql.toString());
+		query.setParameter("days", days);
+		
 		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
 		return query.list();
 	}

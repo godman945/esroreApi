@@ -9,6 +9,6 @@ import com.fet.db.oracle.service.base.IBaseService;
 public interface ICrossCooperationReportService extends IBaseService<Object, String> {
 
 	// shopee 對帳日報表
-	public List<List<String>> findShopeeDailyReport() throws Exception;
+	public List<List<String>> findShopeeDailyReport(int days) throws Exception;
 
 }

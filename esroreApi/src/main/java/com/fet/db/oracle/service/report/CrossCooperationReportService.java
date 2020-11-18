@@ -25,9 +25,9 @@ public class CrossCooperationReportService extends BaseService<Object, String>
 	ICrossCooperationReportDAO crossCooperationReportDAO;
 
 	@SuppressWarnings("deprecation")
-	public List<List<String>> findShopeeDailyReport() throws Exception {
+	public List<List<String>> findShopeeDailyReport(int days) throws Exception {
 
-		List<Map<String, String>> dbDataList = crossCooperationReportDAO.findShopeeDailyReport();
+		List<Map<String, String>> dbDataList = crossCooperationReportDAO.findShopeeDailyReport(days);
 		List<List<String>> returnDataList = new ArrayList<List<String>>();
 
 		ObjectMapper objectMapper = new ObjectMapper();
