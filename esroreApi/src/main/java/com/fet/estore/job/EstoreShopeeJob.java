@@ -114,7 +114,7 @@ public class EstoreShopeeJob {
 					String masterIaStatus = StringUtils.isBlank(resultData.get("CO_MASTER_IA_STATUS")) || resultData.get("CO_MASTER_IA_STATUS").equals("null") ? "" :resultData.get("CO_MASTER_IA_STATUS");
 					CrossCooperation crossCooperation = crossCooperationService.get(orderSN);
 					crossCooperation.setCancelFlag("Y");
-					crossCooperation.setOrderStatus(EnumFetIaStatus.FET_D.getType());
+					crossCooperation.setOrderStatus(coStatus);
 					crossCooperation.setUpdateDate(date);
 					crossCooperation.setCoStatus(masterCoStatus);
 					crossCooperation.setIaStatus(masterIaStatus);
@@ -174,19 +174,18 @@ public class EstoreShopeeJob {
 				String orderStatus = StringUtils.isBlank(resultData.get("MASTER_CO_STATUS")) || resultData.get("MASTER_CO_STATUS").equals("null") ? "" :resultData.get("MASTER_CO_STATUS");
 				
 				
-				
 				//狀態為BD時已有配送資料則送BCS
 				if(masterCoStatus.equals(EnumFetOrderStatus.FET_BD.getType()) && StringUtils.isNotBlank(csStoreNo)) {
 					orderStatus = EnumFetOrderStatus.FET_BCS.getType();
 				}
-				//IA_STATUS狀態為D送TGR
-				if(masterIaStatus.equals(EnumFetIaStatus.FET_D.getType())) {
-					orderStatus = EnumFetOrderStatus.FET_TGR.getType();
-				}
-				
 				//CO_STATUS狀態為TGA送TI
 				if(masterCoStatus.equals(EnumFetOrderStatus.FET_TGA.getType())) {
 					orderStatus = EnumFetOrderStatus.FET_TI.getType();
+				}
+				
+				//IA_STATUS狀態為D送TGR
+				if(masterIaStatus.equals(EnumFetIaStatus.FET_D.getType())) {
+					orderStatus = EnumFetOrderStatus.FET_TGR.getType();
 				}
 				
 				//判斷是否已經發送過TI

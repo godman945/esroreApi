@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fet.db.oracle.dao.base.BaseDAO;
 import com.fet.db.oracle.dao.coMaster.ICoMasterDAO;
 import com.fet.db.oracle.pojo.CoMaster;
+import com.fet.db.oracle.pojo.CrossCooperation;
 import com.fet.db.oracle.service.coMaster.ICoMasterService;
 import com.fet.db.oracle.service.crossCooperation.ICrossCooperationService;
 import com.fet.enumerate.EnumFetShopeeDalityReportColumn;
@@ -50,12 +51,35 @@ public class AlexTest extends BaseDAO{
 		
 		
 		
-		Calendar can = Calendar.getInstance();
-		can.setTime(sdf.parse("2020-05-22"));
+		
+//		TG201117000272S
 		
 		
-		CoMaster coMaster = coMasterService.get("TG201117000325S");
-		coMaster.setActivationDate(can.getTime());
+		
+		CoMaster coMaster = CoMasterDAO.get("TG201112000129S");
+		coMaster.setNpStatus("S");
+//		Calendar cal = Calendar.getInstance();
+//		cal.setTime(new Date());
+//		cal.add(Calendar.DAY_OF_MONTH,-1);
+//		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//		System.out.println(sdf.format(cal.getTime()));
+//		coMaster.setActivationDate(new Date());
+//		coMaster.setCoDate(cal.getTime());
+//		coMaster.setCsStoreNo("test");
+//		coMaster.setIaStatus("D");
+		
+		
+//		CrossCooperation crossCooperation = crossCooperationService.get("2011166DDB8XYN");
+//		crossCooperation.setCoStatus("");
+//		crossCooperation.setOrderStatus("TGR");
+//		crossCooperation.setCancelFlag("");
+		
+//		Calendar can = Calendar.getInstance();
+//		can.setTime(sdf.parse("2020-05-22"));
+//		
+//		
+//		CoMaster coMaster = coMasterService.get("TG201117000325S");
+//		coMaster.setActivationDate(can.getTime());
 		
 		
 //		List<String> coStatusList = new ArrayList<String>();

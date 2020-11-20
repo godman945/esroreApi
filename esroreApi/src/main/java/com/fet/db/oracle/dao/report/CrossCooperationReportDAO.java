@@ -23,7 +23,6 @@ public class CrossCooperationReportDAO extends BaseDAO<Object, String> implement
 		sql.append(" a.MSISDN, ");
 		sql.append(" a.ONSALE_NAME, ");
 		sql.append(" a.PRODUCT_NAME phone_name, ");
-		sql.append(" a.phone_type, ");
 		sql.append(" a.FETNO, ");
 		sql.append(" a.PREPAYMENT, ");
 		sql.append(" a.PRODUCT_PRICE, ");
@@ -106,7 +105,7 @@ public class CrossCooperationReportDAO extends BaseDAO<Object, String> implement
 		sql.append(" 'TOP', '更改促銷方案', ");
 		sql.append(" m.CO_STATUS) master_CO_STATUS, ");
 		sql.append("  TO_CHAR(m.ACTIVATION_DATE, 'yyyy-mm-dd hh24:mm ss') master_ACTIVATION_DATE, ");
-		sql.append(" m.CO_TYPE master_CO_TYPE, ");
+		sql.append(" DECODE(m.NP_STATUS,'P', '處理中','F','失敗','S','成功',m.NP_STATUS) master_NP_STATUS, ");
 		sql.append("  TO_CHAR(m.ACTIVATION_DATE + 10, 'yyyy-mm-dd hh24:mm ss') ACTIVATION_DATE_add_10, ");
 		sql.append("  ( ");
 		sql.append(" CASE ");
@@ -115,7 +114,7 @@ public class CrossCooperationReportDAO extends BaseDAO<Object, String> implement
 		sql.append("  END ");
 		sql.append("  ) master_over_ACTIVATION_DATE, ");
 		sql.append(" TO_CHAR(m.co_date, 'yyyy-mm-dd') co_date, ");
-		sql.append("  TO_CHAR(sysdate - 6, 'yyyy-mm-dd') sys_date ");
+		sql.append("  TO_CHAR(sysdate - :days, 'yyyy-mm-dd') sys_date ");
 		sql.append(" FROM (SELECT ");
 		sql.append("  order_no, ");
 		sql.append("  cono, ");
@@ -124,8 +123,6 @@ public class CrossCooperationReportDAO extends BaseDAO<Object, String> implement
 		sql.append("  ORDER_TYPE, ");
 		sql.append("  MSISDN, ");
 		sql.append("  ONSALE_NAME, ");
-		sql.append("  '缺' phone_name, ");
-		sql.append("  '缺' phone_type, ");
 		sql.append(" FETNO, ");
 		sql.append("  PREPAYMENT, ");
 		sql.append("  PRODUCT_PRICE, ");
@@ -141,7 +138,7 @@ public class CrossCooperationReportDAO extends BaseDAO<Object, String> implement
 		sql.append("  CO_MASTER m ");
 		sql.append(" WHERE 1 = 1 ");
 		sql.append(" AND m.cono = a.cono ");
-		sql.append(" AND TO_CHAR(m.co_date, 'yyyy-mm-dd') >= TO_CHAR(sysdate - :days, 'yyyy-mm-dd') ");
+		sql.append(" AND (TO_CHAR(m.co_date, 'yyyy-mm-dd') >= TO_CHAR(sysdate - :days, 'yyyy-mm-dd') and TO_CHAR(m.co_date, 'yyyy-mm-dd') < TO_CHAR(sysdate, 'yyyy-mm-dd') ) ");
 		sql.append(" ORDER BY m.co_date DESC ");
 		Query query = super.getHibernateTemplate().getSessionFactory().getCurrentSession().createNativeQuery(sql.toString());
 		query.setParameter("days", days);

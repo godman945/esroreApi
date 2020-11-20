@@ -43,7 +43,6 @@ public class EstoreShopeeReportJob {
 	
 	/*
 	 * 1.撈取shopee報表
-	 * 2.email寄出
 	 * */
 	@Transactional
 	public void process() throws Exception {
@@ -87,6 +86,7 @@ public class EstoreShopeeReportJob {
 			log.info("========EstoreShopeeReportJob.process() END========");
 		}catch (Exception e) {
 			log.error(e.getMessage());
+			log.info("========EstoreShopeeReportJob.process() FAIL END========");
 		}
 	}
 

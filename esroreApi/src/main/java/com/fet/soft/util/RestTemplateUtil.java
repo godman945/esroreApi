@@ -30,7 +30,6 @@ public class RestTemplateUtil {
     	headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
     	HttpEntity<Map<String, String>> entity = new HttpEntity<>(parameter, headers);
     	ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
-    	long endTime = System.currentTimeMillis();
     	log.info(">>>>>> END doPost RESULT:"+response.getBody().toString());
     	return response.getBody().toString();
     	
