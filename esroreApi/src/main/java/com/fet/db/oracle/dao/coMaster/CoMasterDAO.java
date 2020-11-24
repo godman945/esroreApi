@@ -49,7 +49,7 @@ public class CoMasterDAO extends BaseDAO<CoMaster, String> implements ICoMasterD
 		sql.append(" 	AND NVL(m.IA_STATUS, ' ') <> 'C' ");
 		sql.append(" 	AND m.CO_STATUS in(:coStatusList) ");
 		sql.append(" 	AND NVL(a.CO_STATUS, ' ') <>  m.CO_STATUS  ");
-		
+		sql.append("	AND TO_CHAR(m.CO_DATE, 'yyyy-mm-dd') >= TO_CHAR(sysdate -90, 'yyyy-mm-dd') ");
 		
 		NativeQuery query = super.getHibernateTemplate().getSessionFactory().getCurrentSession().createNativeQuery(sql.toString());
 		query.setParameterList("coStatusList", coStatusList);

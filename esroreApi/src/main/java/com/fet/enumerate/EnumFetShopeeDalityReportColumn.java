@@ -8,7 +8,7 @@ public enum EnumFetShopeeDalityReportColumn {
 	ORDER_TYPE("shopee訂單型態代碼","ORDER_TYPE"),
 	MSISDN("門號","MSISDN"),
 	ONSALE_NAME("申辦方案名稱(中文)","ONSALE_NAME"),
-	PHONE_NAME("手機品名","PHONE_NAME"),
+	PHONE_NAME("申辦手機型號","PHONE_NAME"),
 	FETNO("申辦手機料號","FETNO"),
 	PREPAYMENT("預繳金","PREPAYMENT"),
 	PRODUCT_PRICE("專案手機價","PRODUCT_PRICE"),

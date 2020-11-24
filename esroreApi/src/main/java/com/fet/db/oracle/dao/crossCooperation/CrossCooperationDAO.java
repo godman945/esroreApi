@@ -49,10 +49,12 @@ public class CrossCooperationDAO extends BaseDAO<CrossCooperation, String> imple
 		sql.append(" AND cono <> 'null' )a, ");
 		sql.append(" co_master m ");
 		sql.append(" WHERE 1=1 ");
-		sql.append(" AND m.IA_STATUS ='C' ");
 		sql.append(" AND a.cono = m.cono ");
-		sql.append(" AND NVL(a.CO_STATUS, ' ') <> m.co_status  ");
-		
+		sql.append(" AND m.CO_STATUS is not null ");
+		sql.append(" AND m.IA_STATUS is not null ");
+		sql.append(" AND ( m.IA_STATUS ='C' OR  (m.IA_STATUS <> 'C' and  m.co_status in('T7I','TB1','BR2','TOC','TON') ) ) ");
+		sql.append(" AND  NVL(a.CO_STATUS, ' ') <> m.co_status ");
+		sql.append(" AND TO_CHAR(m.CO_DATE, 'yyyy-mm-dd') >= TO_CHAR(sysdate -90, 'yyyy-mm-dd') ");
 		Query query = super.getHibernateTemplate().getSessionFactory().getCurrentSession().createNativeQuery(sql.toString());
 		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
 		return query.list();

@@ -56,8 +56,29 @@ public class AlexTest extends BaseDAO{
 		
 		
 		
-		CoMaster coMaster = CoMasterDAO.get("TG201112000129S");
-		coMaster.setNpStatus("S");
+		CoMaster coMaster = CoMasterDAO.get("TG201111000152");
+		
+		coMaster.setIaStatus("D");
+		coMaster.setCoStatus("BO");
+		
+		
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DAY_OF_MONTH,-90);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd 16:24 23");
+		System.out.println(sdf.format(cal.getTime()));
+		
+		coMaster.setCoDate(cal.getTime());
+		
+		
+		
+//		CrossCooperation crossCooperation = crossCooperationService.get("ALEX-TEST3");
+////		crossCooperation.setCoStatus("");
+//		crossCooperation.setOrderStatus("");
+//		crossCooperation.setCancelFlag("");
+		
+		
+//		System.out.println(coMaster == null);
+//		coMaster.setNpStatus("S");
 //		Calendar cal = Calendar.getInstance();
 //		cal.setTime(new Date());
 //		cal.add(Calendar.DAY_OF_MONTH,-1);

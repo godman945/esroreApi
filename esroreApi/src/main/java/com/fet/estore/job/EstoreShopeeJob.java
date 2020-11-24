@@ -45,6 +45,9 @@ public class EstoreShopeeJob {
 
 	private Timestamp jobTimeStamp = new Timestamp(System.currentTimeMillis());
 	
+	@Value("${shopee.order.api}")
+	private String orderApi;
+	
 	@Value("${shopee.valid.hours}")
 	private int validHours;
 	
@@ -59,11 +62,12 @@ public class EstoreShopeeJob {
 			log.info(">>>>>> env:"+activeEnv);
 			log.info(">>>>>> validHours:"+validHours);
 			
-			//1.執行過時資料訂單取消API
-			processCancelOverTimeOrder();
 			
-			//2.訂單狀態為C 呼叫蝦皮取消訂單
-			processCancelOrder();
+			//1.執行過時資料訂單取消API
+//			processCancelOverTimeOrder();
+//			
+//			//2.訂單狀態為C 呼叫蝦皮取消訂單
+//			processCancelOrder();
 			
 			//3.執行CO_STATUS狀態且IA_STATUS不為C
 			processCoMasterOrdeForApi();
@@ -311,9 +315,7 @@ public class EstoreShopeeJob {
 	 * 呼叫蝦皮API
 	 */
 	public boolean callShopeeApi(Map<String,String> paramaterMap) throws Exception {
-		String url = "http://10.64.33.156:48080/estore-api/shop/updateShopeeOrderStatus";
-//			   url = "http://localhost:5080/alexSpringBoot/products";
-		String result = RestTemplateUtil.getInstance().doPost(url, MediaType.APPLICATION_JSON, paramaterMap);
+		String result = RestTemplateUtil.getInstance().doPost(orderApi, MediaType.APPLICATION_JSON, paramaterMap);
 		JSONObject resultJson = new JSONObject(result);
 		if (resultJson.get("rtnCode").equals("00000")) {
 			return true;
