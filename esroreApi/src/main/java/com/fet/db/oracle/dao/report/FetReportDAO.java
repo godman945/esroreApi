@@ -105,7 +105,7 @@ public class FetReportDAO extends BaseDAO<Object, String> implements IFetReportD
 		sql.append(" 'TOP', '更改促銷方案', ");
 		sql.append(" m.CO_STATUS) master_CO_STATUS, ");
 		sql.append("  TO_CHAR(m.ACTIVATION_DATE, 'yyyy-mm-dd hh24:mm ss') master_ACTIVATION_DATE, ");
-		sql.append(" DECODE(m.NP_STATUS,'P', '處理中','F','失敗','S','成功',m.NP_STATUS) master_NP_STATUS, ");
+		sql.append(" DECODE(m.NP_STATUS,'P', '處理中','F','失敗','S','成功','C','取消',m.NP_STATUS) master_NP_STATUS, ");
 		sql.append("  TO_CHAR(m.ACTIVATION_DATE + 10, 'yyyy-mm-dd hh24:mm ss') ACTIVATION_DATE_add_10, ");
 		sql.append("  ( ");
 		sql.append(" CASE ");
