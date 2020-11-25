@@ -1,12 +1,28 @@
 package com.fet.alex;
+import java.io.ByteArrayInputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.activation.DataHandler;
+import javax.mail.Message;
+import javax.mail.Message.RecipientType;
+import javax.mail.Multipart;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
+import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -15,18 +31,25 @@ import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fet.db.oracle.dao.base.BaseDAO;
 import com.fet.db.oracle.dao.coMaster.ICoMasterDAO;
 import com.fet.db.oracle.pojo.CoMaster;
 import com.fet.db.oracle.pojo.CrossCooperation;
 import com.fet.db.oracle.service.coMaster.ICoMasterService;
 import com.fet.db.oracle.service.crossCooperation.ICrossCooperationService;
+import com.fet.db.oracle.service.report.IFetReportService;
 import com.fet.enumerate.EnumFetShopeeDalityReportColumn;
+import com.fet.enumerate.EnumFetShopeeFetNoDalityReportColumn;
 import com.fet.spring.init.SpringbootWebApplication;
+
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
 
 
 @Component
-public class AlexTest extends BaseDAO{
+public class AlexTest {
 	
 	
 	@Autowired
@@ -34,6 +57,11 @@ public class AlexTest extends BaseDAO{
 	
 	@Autowired
 	private ICoMasterService coMasterService;
+	
+	
+	@Autowired
+	private IFetReportService crossCooperationReportService;
+	
 	
 	@Autowired
 	private HibernateTemplate hibernateTemplate;
@@ -49,25 +77,112 @@ public class AlexTest extends BaseDAO{
 	@Transactional
 	public void test() throws Exception{
 		
+		try{
+
+			StringBuilder content = new StringBuilder();
+
+			int index = 0;
+			for (EnumFetShopeeFetNoDalityReportColumn enumFetShopeeFetNoDalityReportColumn : EnumFetShopeeFetNoDalityReportColumn.values()) {
+				if(index == 0){
+					content.append(enumFetShopeeFetNoDalityReportColumn.getName());
+				}else{
+					content.append(",").append(enumFetShopeeFetNoDalityReportColumn.getName());
+				}
+				index = index + 1;
+			}
+			
+			content.append("\n");
+			
+			ObjectMapper objectMapper = new ObjectMapper();
+			JSONParser jsonParser = new JSONParser();
+			List<Map<String, String>> data =  crossCooperationReportService.findShopeeFetNoDailyReport();
+			for (Map<String, String> rowDataMap : data) {
+				index = 0;
+				String jsonStr = objectMapper.writeValueAsString(rowDataMap);
+				JSONObject dataJson = jsonParser.parse(jsonStr.toString(), JSONObject.class);
+				
+				for (EnumFetShopeeFetNoDalityReportColumn enumFetShopeeFetNoDalityReportColumn : EnumFetShopeeFetNoDalityReportColumn.values()) {
+					if(index == 0){
+						content.append(dataJson.getAsString(enumFetShopeeFetNoDalityReportColumn.getColumn()));
+					}else{
+						content.append(",").append(dataJson.getAsString(enumFetShopeeFetNoDalityReportColumn.getColumn()));
+					}
+					index = index + 1;
+				}
+				content.append("\n");
+			}
+			
+			Properties props = System.getProperties();
+			props.put("mail.host", "10.68.77.40");
+			props.put("mail.transport.protocol", "smtp");
+			Session session = Session.getDefaultInstance(props);
+			//送,收件人
+			InternetAddress from = new InternetAddress("alexchen3@fareastone.com.tw");
+			
+//			InternetAddress to = new InternetAddress("alexchen3@fareastone.com.tw");
+			
+			InternetAddress[] to = new InternetAddress[2];
+			to[0] = new InternetAddress("yufchang@fareastone.com.tw");
+			to[1] = new InternetAddress("alexchen3@fareastone.com.tw");
+			
+			
+			
+			//訊息(信件)
+			MimeMessage message = new MimeMessage(session);
+			
+			message.setFrom(from);
+			message.setRecipients(RecipientType.TO, to);
+			
+			message.setSubject(MimeUtility.encodeText("測試發信","UTF-8","B"));
+
+			
+			SimpleDateFormat dformat = new SimpleDateFormat("yyyyMMddhhmmss");
+			String filename = MimeUtility.encodeText("遠傳料號日報表_" + dformat.format(new Date()) + ".csv","UTF-8","B");
+			log.info(">>>>>filename:"+filename);
+			
+			MimeBodyPart attachFilePart = new MimeBodyPart();
+			attachFilePart.addHeader("Content-Type", "application/octet-stream; charset=big5");
+			
+			
+			attachFilePart.setDataHandler(new DataHandler(new ByteArrayDataSource(new ByteArrayInputStream(content.toString().getBytes("big5")),"text/csv")));
+			attachFilePart.setFileName(filename);
+			
+			Multipart multipart = new MimeMultipart();
+			multipart.addBodyPart(attachFilePart);
+			
+			message.setContent(multipart);
+			Transport.send(message);
+			
+		}catch(Exception e){
+			log.error(e.getMessage());
+			e.getSuppressed();
+		}
+		
+		
+		
+		
+		
+		
+		
 		
 		
 		
 //		TG201117000272S
 		
 		
-		
-		CoMaster coMaster = CoMasterDAO.get("TG201111000152");
-		
-		coMaster.setIaStatus("D");
-		coMaster.setCoStatus("BO");
-		
-		
-		Calendar cal = Calendar.getInstance();
-		cal.add(Calendar.DAY_OF_MONTH,-90);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd 16:24 23");
-		System.out.println(sdf.format(cal.getTime()));
-		
-		coMaster.setCoDate(cal.getTime());
+//		
+//		CoMaster coMaster = CoMasterDAO.get("TG201111000152");
+//		
+//		coMaster.setIaStatus("D");
+//		coMaster.setCoStatus("BO");
+//		
+//		
+//		Calendar cal = Calendar.getInstance();
+//		cal.add(Calendar.DAY_OF_MONTH,-90);
+//		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd 16:24 23");
+//		System.out.println(sdf.format(cal.getTime()));
+//		
+//		coMaster.setCoDate(cal.getTime());
 		
 		
 		
@@ -343,7 +458,7 @@ public class AlexTest extends BaseDAO{
 			for (int j = 0; j < 3; j++) {
 				json.put(string+"_"+j, "value_"+j);
 			}
-			array.put(json);
+			array.add(json);
 		}
 		
 		
@@ -387,26 +502,33 @@ public class AlexTest extends BaseDAO{
 		}
 		
 		
-		System.out.println(content);
 		
 		
 		
 		
-//		Properties props = System.getProperties();
-//		props.put("mail.host", "10.68.77.40");
-//		props.put("mail.transport.protocol", "smtp");
-//		Session session = Session.getDefaultInstance(props);
-//		//送,收件人
-//		InternetAddress from = new InternetAddress("alexchen3@fareastone.com.tw");
-//		InternetAddress to = new InternetAddress("alexchen3@fareastone.com.tw");
-//		//訊息(信件)
-//		Message message = new MimeMessage(session);
-//		message.setFrom(from);
-//		message.setRecipient(RecipientType.TO, to);
-//		message.setSubject("測試發信");
-//		
-//		 Multipart multipart = new MimeMultipart();
-//
+		Properties props = System.getProperties();
+		props.put("mail.host", "10.68.77.40");
+		props.put("mail.transport.protocol", "smtp");
+		Session session = Session.getDefaultInstance(props);
+		//送,收件人
+		InternetAddress from = new InternetAddress("alexchen3@fareastone.com.tw");
+		InternetAddress to = new InternetAddress("alexchen3@fareastone.com.tw");
+		//訊息(信件)
+		Message message = new MimeMessage(session);
+		message.setFrom(from);
+		message.setRecipient(RecipientType.TO, to);
+		message.setSubject("測試發信");
+
+		MimeBodyPart attachFilePart = new MimeBodyPart();
+		attachFilePart.addHeader("Content-Type", "application/octet-stream; charset=\"utf-8\" ");
+		attachFilePart.setDataHandler(new DataHandler(new ByteArrayDataSource(new ByteArrayInputStream(content.toString().getBytes("big5")),"text/csv")));
+		attachFilePart.setFileName(filename);
+		
+		Multipart multipart = new MimeMultipart();
+		multipart.addBodyPart(attachFilePart);
+		
+		message.setContent(multipart);
+		Transport.send(message);
 //		 
 //		 BodyPart messageBodyPart = new MimeBodyPart();
 //		 messageBodyPart.setText("請按下方超連結以完成E-mail驗證");

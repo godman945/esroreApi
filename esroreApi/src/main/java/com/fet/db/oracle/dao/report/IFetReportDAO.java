@@ -5,8 +5,10 @@ import java.util.Map;
 
 import com.fet.db.oracle.dao.base.IBaseDAO;
 
-public interface ICrossCooperationReportDAO extends IBaseDAO<Object, String> {
+public interface IFetReportDAO extends IBaseDAO<Object, String> {
 
 	public List<Map<String,String>> findShopeeDailyReport(int days) throws Exception;
+	
+	public List<Map<String,String>> findShopeeFetNoDailyReport() throws Exception;
 
 }

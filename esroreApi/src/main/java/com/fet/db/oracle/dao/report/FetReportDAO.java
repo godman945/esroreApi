@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.fet.db.oracle.dao.base.BaseDAO;
 
 @Repository
-public class CrossCooperationReportDAO extends BaseDAO<Object, String> implements ICrossCooperationReportDAO {
+public class FetReportDAO extends BaseDAO<Object, String> implements IFetReportDAO {
 
 	@Override
 	public List<Map<String,String>> findShopeeDailyReport(int days) throws Exception {
@@ -134,7 +134,7 @@ public class CrossCooperationReportDAO extends BaseDAO<Object, String> implement
 		sql.append(" FROM CROSS_COOPERATION ");
 		sql.append(" WHERE 1 = 1 ");
 		sql.append("  AND cono IS NOT NULL ");
-		sql.append("  AND FETNO IS NOT NULL) a, ");
+		sql.append(" ) a, ");
 		sql.append("  CO_MASTER m ");
 		sql.append(" WHERE 1 = 1 ");
 		sql.append(" AND m.cono = a.cono ");
@@ -143,6 +143,26 @@ public class CrossCooperationReportDAO extends BaseDAO<Object, String> implement
 		Query query = super.getHibernateTemplate().getSessionFactory().getCurrentSession().createNativeQuery(sql.toString());
 		query.setParameter("days", days);
 		
+		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		return query.list();
+	}
+
+	@Override
+	public List<Map<String, String>> findShopeeFetNoDailyReport() throws Exception {
+		StringBuffer sql = new StringBuffer();
+		sql.append("  SELECT  ");
+		sql.append("  	b.FET_NO,  ");
+		sql.append("  	b.NAME,  ");
+		sql.append(" 	b.INVENTORY  ");
+		sql.append("  FROM ");
+		sql.append("  handset_group a, product b  ");
+		sql.append("   WHERE ");
+		sql.append("  a.PRODUCT_ID = b.product_id  ");
+		sql.append("  AND a.onsale = 'Y'  ");
+		sql.append("  ORDER BY ");
+		sql.append("  a.PRODUCT_ID ");
+		
+		Query query = super.getHibernateTemplate().getSessionFactory().getCurrentSession().createNativeQuery(sql.toString());
 		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
 		return query.list();
 	}

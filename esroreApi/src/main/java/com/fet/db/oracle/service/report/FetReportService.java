@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fet.db.oracle.dao.report.ICrossCooperationReportDAO;
+import com.fet.db.oracle.dao.report.IFetReportDAO;
 import com.fet.db.oracle.service.base.BaseService;
 import com.fet.enumerate.EnumFetShopeeDalityReportColumn;
 import com.fet.soft.util.StringUtil;
@@ -18,11 +18,10 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 
 @Service
-public class CrossCooperationReportService extends BaseService<Object, String>
-		implements ICrossCooperationReportService {
+public class FetReportService extends BaseService<Object, String>	implements IFetReportService {
 
 	@Autowired
-	ICrossCooperationReportDAO crossCooperationReportDAO;
+	IFetReportDAO crossCooperationReportDAO;
 
 	@SuppressWarnings("deprecation")
 	public List<List<String>> findShopeeDailyReport(int days) throws Exception {
@@ -51,5 +50,10 @@ public class CrossCooperationReportService extends BaseService<Object, String>
 			returnDataList.add(rowDataList);
 		}
 		return returnDataList;
+	}
+
+	@Override
+	public List<Map<String, String>> findShopeeFetNoDailyReport() throws Exception {
+		return crossCooperationReportDAO.findShopeeFetNoDailyReport();
 	}
 }

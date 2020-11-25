@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.csvreader.CsvWriter;
-import com.fet.db.oracle.service.report.ICrossCooperationReportService;
+import com.fet.db.oracle.service.report.IFetReportService;
 import com.fet.enumerate.EnumFetShopeeDalityReportColumn;
 import com.fet.soft.util.DateUtil;
 import com.fet.spring.init.SpringbootWebApplication;
@@ -27,7 +27,7 @@ public class EstoreShopeeReportJob {
 	private Logger log = LogManager.getLogger(getClass());
 
 	@Autowired
-	ICrossCooperationReportService crossCooperationReportService;
+	IFetReportService crossCooperationReportService;
 	
 	
 	@Value("${shopee.daily.report.path}")
