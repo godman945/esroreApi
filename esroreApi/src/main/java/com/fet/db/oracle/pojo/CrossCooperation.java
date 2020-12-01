@@ -1,5 +1,5 @@
 package com.fet.db.oracle.pojo;
-// Generated 2020/11/10 �U�� 04:00:33 by Hibernate Tools 5.2.12.Final
+// Generated 2020/11/27 �U�� 05:18:45 by Hibernate Tools 4.3.5.Final
 
 import java.util.Date;
 import javax.persistence.Column;
@@ -293,7 +293,7 @@ public class CrossCooperation implements java.io.Serializable {
 		this.coStatus = coStatus;
 	}
 
-	@Column(name = "ORDER_STATUS", length = 2)
+	@Column(name = "ORDER_STATUS", length = 5)
 	public String getOrderStatus() {
 		return this.orderStatus;
 	}

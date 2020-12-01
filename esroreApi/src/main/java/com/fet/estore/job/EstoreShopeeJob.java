@@ -64,10 +64,10 @@ public class EstoreShopeeJob {
 			
 			
 			//1.執行過時資料訂單取消API
-//			processCancelOverTimeOrder();
-//			
-//			//2.訂單狀態為C 呼叫蝦皮取消訂單
-//			processCancelOrder();
+			processCancelOverTimeOrder();
+			
+			//2.訂單狀態為C 呼叫蝦皮取消訂單
+			processCancelOrder();
 			
 			//3.執行CO_STATUS狀態且IA_STATUS不為C
 			processCoMasterOrdeForApi();

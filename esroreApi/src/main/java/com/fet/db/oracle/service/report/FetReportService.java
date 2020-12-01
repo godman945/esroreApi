@@ -34,7 +34,7 @@ public class FetReportService extends BaseService<Object, String>	implements IFe
 
 		for (Map<String, String> rowDataMap : dbDataList) {
 			String jsonStr = objectMapper.writeValueAsString(rowDataMap);
-			JSONObject dataJson = jsonParser.parse(jsonStr.toString().getBytes(), JSONObject.class);
+			JSONObject dataJson = jsonParser.parse(jsonStr.toString(), JSONObject.class);
 
 			List<String> rowDataList = new ArrayList<String>();
 			for (EnumFetShopeeDalityReportColumn enumFetShopeeDalityReportColumn : EnumFetShopeeDalityReportColumn.values()) {

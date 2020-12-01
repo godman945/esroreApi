@@ -28,7 +28,7 @@ public class CoMasterDAO extends BaseDAO<CoMaster, String> implements ICoMasterD
 		sql.append("  		m.SHIPMENT_NO, ");
 		sql.append("  		m.CS_STORE_NO, ");
 		sql.append("  		m.CS_STORE_NAME, ");
-		sql.append("  		TO_CHAR(a.UPDATE_DATE,'yyyy-mm-dd hh24:mm ss')UPDATE_DATE ");
+		sql.append("  		TO_CHAR(a.UPDATE_DATE,'yyyy-mm-dd hh24:mi ss')UPDATE_DATE ");
 		sql.append(" FROM ");
 		sql.append(" (	SELECT 	c.CONO, ");
 		sql.append("  			c.USER_NAME, ");

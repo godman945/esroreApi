@@ -1,5 +1,8 @@
 package com.fet.alex;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -21,6 +24,8 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 import javax.mail.util.ByteArrayDataSource;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.net.ftp.FTPClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +46,7 @@ import com.fet.db.oracle.service.crossCooperation.ICrossCooperationService;
 import com.fet.db.oracle.service.report.IFetReportService;
 import com.fet.enumerate.EnumFetShopeeDalityReportColumn;
 import com.fet.enumerate.EnumFetShopeeFetNoDalityReportColumn;
+import com.fet.soft.util.FTPUtils;
 import com.fet.spring.init.SpringbootWebApplication;
 
 import net.minidev.json.JSONArray;
@@ -74,84 +80,86 @@ public class AlexTest {
 
 	private SimpleDateFormat sdf = new SimpleDateFormat("YYYY-mm-dd");
 	
+	
+	
 	@Transactional
 	public void test() throws Exception{
 		
 		try{
-
-			StringBuilder content = new StringBuilder();
-
-			int index = 0;
-			for (EnumFetShopeeFetNoDalityReportColumn enumFetShopeeFetNoDalityReportColumn : EnumFetShopeeFetNoDalityReportColumn.values()) {
-				if(index == 0){
-					content.append(enumFetShopeeFetNoDalityReportColumn.getName());
-				}else{
-					content.append(",").append(enumFetShopeeFetNoDalityReportColumn.getName());
-				}
-				index = index + 1;
-			}
-			
-			content.append("\n");
-			
-			ObjectMapper objectMapper = new ObjectMapper();
-			JSONParser jsonParser = new JSONParser();
-			List<Map<String, String>> data =  crossCooperationReportService.findShopeeFetNoDailyReport();
-			for (Map<String, String> rowDataMap : data) {
-				index = 0;
-				String jsonStr = objectMapper.writeValueAsString(rowDataMap);
-				JSONObject dataJson = jsonParser.parse(jsonStr.toString(), JSONObject.class);
-				
-				for (EnumFetShopeeFetNoDalityReportColumn enumFetShopeeFetNoDalityReportColumn : EnumFetShopeeFetNoDalityReportColumn.values()) {
-					if(index == 0){
-						content.append(dataJson.getAsString(enumFetShopeeFetNoDalityReportColumn.getColumn()));
-					}else{
-						content.append(",").append(dataJson.getAsString(enumFetShopeeFetNoDalityReportColumn.getColumn()));
-					}
-					index = index + 1;
-				}
-				content.append("\n");
-			}
-			
-			Properties props = System.getProperties();
-			props.put("mail.host", "10.68.77.40");
-			props.put("mail.transport.protocol", "smtp");
-			Session session = Session.getDefaultInstance(props);
-			//送,收件人
-			InternetAddress from = new InternetAddress("alexchen3@fareastone.com.tw");
-			
-//			InternetAddress to = new InternetAddress("alexchen3@fareastone.com.tw");
-			
-			InternetAddress[] to = new InternetAddress[2];
-			to[0] = new InternetAddress("yufchang@fareastone.com.tw");
-			to[1] = new InternetAddress("alexchen3@fareastone.com.tw");
-			
-			
-			
-			//訊息(信件)
-			MimeMessage message = new MimeMessage(session);
-			
-			message.setFrom(from);
-			message.setRecipients(RecipientType.TO, to);
-			
-			message.setSubject(MimeUtility.encodeText("測試發信","UTF-8","B"));
-
-			
-			SimpleDateFormat dformat = new SimpleDateFormat("yyyyMMddhhmmss");
-			String filename = MimeUtility.encodeText("遠傳料號日報表_" + dformat.format(new Date()) + ".csv","UTF-8","B");
-			log.info(">>>>>filename:"+filename);
-			
-			MimeBodyPart attachFilePart = new MimeBodyPart();
-			attachFilePart.addHeader("Content-Type", "application/octet-stream; charset=big5");
-			
-			
-			attachFilePart.setDataHandler(new DataHandler(new ByteArrayDataSource(new ByteArrayInputStream(content.toString().getBytes("big5")),"text/csv")));
-			attachFilePart.setFileName(filename);
-			
-			Multipart multipart = new MimeMultipart();
-			multipart.addBodyPart(attachFilePart);
-			
-			message.setContent(multipart);
-			Transport.send(message);
+			log.info(">>>>>>>>>>>>>>>>>>>>>>>");
+//			StringBuilder content = new StringBuilder();
+//
+//			int index = 0;
+//			for (EnumFetShopeeFetNoDalityReportColumn enumFetShopeeFetNoDalityReportColumn : EnumFetShopeeFetNoDalityReportColumn.values()) {
+//				if(index == 0){
+//					content.append(enumFetShopeeFetNoDalityReportColumn.getName());
+//				}else{
+//					content.append(",").append(enumFetShopeeFetNoDalityReportColumn.getName());
+//				}
+//				index = index + 1;
+//			}
+//			
+//			content.append("\n");
+//			
+//			ObjectMapper objectMapper = new ObjectMapper();
+//			JSONParser jsonParser = new JSONParser();
+//			List<Map<String, String>> data =  crossCooperationReportService.findShopeeFetNoDailyReport();
+//			for (Map<String, String> rowDataMap : data) {
+//				index = 0;
+//				String jsonStr = objectMapper.writeValueAsString(rowDataMap);
+//				JSONObject dataJson = jsonParser.parse(jsonStr.toString(), JSONObject.class);
+//				
+//				for (EnumFetShopeeFetNoDalityReportColumn enumFetShopeeFetNoDalityReportColumn : EnumFetShopeeFetNoDalityReportColumn.values()) {
+//					if(index == 0){
+//						content.append(dataJson.getAsString(enumFetShopeeFetNoDalityReportColumn.getColumn()));
+//					}else{
+//						content.append(",").append(dataJson.getAsString(enumFetShopeeFetNoDalityReportColumn.getColumn()));
+//					}
+//					index = index + 1;
+//				}
+//				content.append("\n");
+//			}
+//			
+//			Properties props = System.getProperties();
+//			props.put("mail.host", "10.68.77.40");
+//			props.put("mail.transport.protocol", "smtp");
+//			Session session = Session.getDefaultInstance(props);
+//			//送,收件人
+//			InternetAddress from = new InternetAddress("alexchen3@fareastone.com.tw");
+//			
+////			InternetAddress to = new InternetAddress("alexchen3@fareastone.com.tw");
+//			
+//			InternetAddress[] to = new InternetAddress[2];
+//			to[0] = new InternetAddress("yufchang@fareastone.com.tw");
+//			to[1] = new InternetAddress("alexchen3@fareastone.com.tw");
+//			
+//			
+//			
+//			//訊息(信件)
+//			MimeMessage message = new MimeMessage(session);
+//			
+//			message.setFrom(from);
+//			message.setRecipients(RecipientType.TO, to);
+//			
+//			message.setSubject(MimeUtility.encodeText("測試發信","UTF-8","B"));
+//
+//			
+//			SimpleDateFormat dformat = new SimpleDateFormat("yyyyMMddhhmmss");
+//			String filename = MimeUtility.encodeText("遠傳料號日報表_" + dformat.format(new Date()) + ".csv","UTF-8","B");
+//			log.info(">>>>>filename:"+filename);
+//			
+//			MimeBodyPart attachFilePart = new MimeBodyPart();
+//			attachFilePart.addHeader("Content-Type", "application/octet-stream; charset=big5");
+//			
+//			
+//			attachFilePart.setDataHandler(new DataHandler(new ByteArrayDataSource(new ByteArrayInputStream(content.toString().getBytes("big5")),"text/csv")));
+//			attachFilePart.setFileName(filename);
+//			
+//			Multipart multipart = new MimeMultipart();
+//			multipart.addBodyPart(attachFilePart);
+//			
+//			message.setContent(multipart);
+//			Transport.send(message);
 			
 		}catch(Exception e){
 			log.error(e.getMessage());
@@ -495,16 +503,7 @@ public class AlexTest {
 			}
 			content.append("\n");
 			
-			
-			
-			
-			
 		}
-		
-		
-		
-		
-		
 		
 		Properties props = System.getProperties();
 		props.put("mail.host", "10.68.77.40");
@@ -529,111 +528,34 @@ public class AlexTest {
 		
 		message.setContent(multipart);
 		Transport.send(message);
-//		 
-//		 BodyPart messageBodyPart = new MimeBodyPart();
-//		 messageBodyPart.setText("請按下方超連結以完成E-mail驗證");
-//		 multipart.addBodyPart(messageBodyPart);
-//		 
-//		 
-//		 
-//		 
-//		 MimeBodyPart attachFilePart = new MimeBodyPart();
-//		 attachFilePart.addHeader("Content-Type", "application/octet-stream; charset=\"utf-8\" "); 
-//		 
-//		 
-//		 
-////		 new ByteArrayInputStream(content.toString().getBytes("big5"))
-//		 attachFilePart.setDataHandler(new DataHandler(new ByteArrayDataSource(new ByteArrayInputStream(content.toString().getBytes("big5")),"text/csv")));
-//		 attachFilePart.setFileName(filename);
-//		 multipart.addBodyPart(attachFilePart);
-//		 
-//		 
-//		 
-//		 message.setContent(multipart);
-//         Transport.send(message);
-		 
-		 
-		
-//		 messageBodyPart = new MimeBodyPart();
-//         DataSource source = new FileDataSource(filename);
-//         messageBodyPart.setDataHandler(new DataHandler(source));
-//         messageBodyPart.setFileName(filename);
-//         multipart.addBodyPart(messageBodyPart);
-		
-         
-		 
-//		  MimeBodyPart attachementBodyPart = new MimeBodyPart();
-//		  URL attachmentUrl = getAttachemntURL(attachment);
-//		  String contentType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(attachmentUrl.getFile());
-//		  attachementBodyPart.setDataHandler(new DataHandler(new ByteArrayDataSource( attachmentUrl.openStream(), contentType ) ));
-//		  String fileName = new File(attachmentUrl.getFile()).getName();
-//		  attachementBodyPart.setFileName(fileName);
-		 
-		 
-		 
+	}
+	
+	public void sendFtp() throws Exception{
+		FTPClient fTPClient = FTPUtils.getInstance().getFTPClient("10.68.68.132", "alexchen3", "Ab0978@@");
+		fTPClient.setFileType(fTPClient.BINARY_FILE_TYPE);
+		fTPClient.makeDirectory("/alex_tool/putPath");
+		fTPClient.changeWorkingDirectory("/alex_tool/putPath");
 		
 		
-		
-		
-		
+		File file =new File("C:\\Users\\alexchen3\\Desktop\\shopee_20201126_job.csv");
+		System.out.println(file.getName());
+		InputStream inputStream = new FileInputStream(file);
+		fTPClient.storeFile(file.getName(), inputStream);
+		inputStream.close();
+		fTPClient.logout();
+
 	}
 	
 	public static void main(String[] args) {
 		try {
 			
-			
-//			 XSSFWorkbook workbook = new XSSFWorkbook();
-//			 XSSFSheet sheet = workbook.createSheet("Java Books");
-//		         
-//		        Object[][] bookData = {
-//		                {"王大天", "Kathy Serria", 79},
-//		                {"Effective Java", "Joshua Bloch", 36},
-//		                {"Clean Code", "Robert martin", 42},
-//		                {"Thinking in Java", "Bruce Eckel", 35},
-//		        };
-//		 
-//		        int rowCount = 0;
-//		         
-//		        for (Object[] aBook : bookData) {
-//		            Row row = sheet.createRow(++rowCount);
-//		             
-//		            int columnCount = 0;
-//		             
-//		            for (Object field : aBook) {
-//		                Cell cell = row.createCell(++columnCount);
-//		                if (field instanceof String) {
-//		                    cell.setCellValue((String) field);
-//		                } else if (field instanceof Integer) {
-//		                    cell.setCellValue((Integer) field);
-//		                }
-//		            }
-//		             
-//		        }
-//		         
-//		         
-//		        try (FileOutputStream outputStream = new FileOutputStream("JavaBooks.xlsx")) {
-//		            workbook.write(outputStream);
-//		        }
-//			
-			
-			
-			
-			
-			
-			
 			ApplicationContext ctx = new SpringApplicationBuilder(SpringbootWebApplication.class).web(WebApplicationType.NONE).run(args);
 			AlexTest alexTest = ctx.getBean(AlexTest.class);
-			alexTest.test();
+//			alexTest.test();
 //			alexTest.sendEmail();
+			alexTest.sendFtp();
 			
 			
-//			StringBuilder content = new StringBuilder();
-//			String alex=null;
-//			
-//			System.out.println(String.valueOf(alex));
-			
-//			content.append(",").append(alex);
-//			System.out.println(content);
 		}catch(Exception e) {
 			e.printStackTrace();
 		}

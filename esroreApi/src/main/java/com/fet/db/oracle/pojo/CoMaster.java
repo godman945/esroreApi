@@ -1,5 +1,5 @@
 package com.fet.db.oracle.pojo;
-// Generated 2020/11/10 �U�� 04:00:33 by Hibernate Tools 5.2.12.Final
+// Generated 2020/11/27 �U�� 05:18:45 by Hibernate Tools 4.3.5.Final
 
 import java.util.Date;
 import javax.persistence.Column;
@@ -2441,7 +2441,7 @@ public class CoMaster implements java.io.Serializable {
 		this.credentialType = credentialType;
 	}
 
-	@Column(name = "TRANS_TYPE", length = 10)
+	@Column(name = "TRANS_TYPE", length = 20)
 	public String getTransType() {
 		return this.transType;
 	}

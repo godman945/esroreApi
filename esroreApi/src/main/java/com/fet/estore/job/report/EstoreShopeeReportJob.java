@@ -1,10 +1,13 @@
 package com.fet.estore.job.report;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
 
+import org.apache.commons.net.ftp.FTPClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +22,7 @@ import com.csvreader.CsvWriter;
 import com.fet.db.oracle.service.report.IFetReportService;
 import com.fet.enumerate.EnumFetShopeeDalityReportColumn;
 import com.fet.soft.util.DateUtil;
+import com.fet.soft.util.FTPUtils;
 import com.fet.spring.init.SpringbootWebApplication;
 
 @Component
@@ -36,10 +40,11 @@ public class EstoreShopeeReportJob {
 	@Value("${shopee.daily.report.day}")
 	private int dailyReporDay;
 	
-	
 	@Value("${spring.profiles.active}")
 	private String activeEnv;
 	
+	@Value("${ftp.server}")
+	private String ftpServer;
 	
 	/*
 	 * 1.撈取shopee報表
@@ -83,12 +88,34 @@ public class EstoreShopeeReportJob {
 				csvWriter.writeRecord(rowData);
 			}
             csvWriter.close();
+            
+            //正式機傳送至FTP
+            if(activeEnv.toUpperCase().equals("PRD")){
+            	 File file = new File(path+"/"+fileName);
+                 SendFtp(file);
+            }
+           
+            
 			log.info("========EstoreShopeeReportJob.process() END========");
 		}catch (Exception e) {
 			log.error(e.getMessage());
 			log.info("========EstoreShopeeReportJob.process() FAIL END========");
 		}
 	}
+	
+	private void SendFtp(File file) throws Exception{
+		FTPClient fTPClient = FTPUtils.getInstance().getFTPClient(ftpServer, "rppreport", "1qaz@WSX");
+		fTPClient.setFileType(fTPClient.BINARY_FILE_TYPE);
+		fTPClient.makeDirectory("/rppreport/upload/Security/P231236");
+		fTPClient.changeWorkingDirectory("/rppreport/upload/Security/P231236");
+		InputStream inputStream = new FileInputStream(file);
+		fTPClient.storeFile(file.getName(), inputStream);
+		inputStream.close();
+		fTPClient.logout();
+	}
+	
+	
+	
 
 	public static void main(String[] args) {
 		try {

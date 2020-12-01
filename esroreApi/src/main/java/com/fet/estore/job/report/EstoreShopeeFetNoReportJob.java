@@ -132,10 +132,8 @@ public class EstoreShopeeFetNoReportJob {
 
 			MimeBodyPart attachFilePart = new MimeBodyPart();
 			attachFilePart.addHeader("Content-Type", "application/octet-stream; charset=big5");
-			attachFilePart.setDataHandler(new DataHandler(new ByteArrayDataSource(
-					new ByteArrayInputStream(mailContent.toString().getBytes("big5")), "text/csv")));
-			attachFilePart.setFileName(
-					MimeUtility.encodeText(filename + "_" + dformat.format(new Date()) + ".csv", "UTF-8", "B"));
+			attachFilePart.setDataHandler(new DataHandler(new ByteArrayDataSource(new ByteArrayInputStream(mailContent.toString().getBytes("big5")), "text/csv")));
+			attachFilePart.setFileName(MimeUtility.encodeText(filename+"["+activeEnv+"]" + "_" + dformat.format(new Date()) + ".csv", "UTF-8", "B"));
 
 			Multipart multipart = new MimeMultipart();
 			multipart.addBodyPart(attachFilePart);
