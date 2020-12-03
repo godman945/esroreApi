@@ -106,8 +106,8 @@ public class EstoreShopeeReportJob {
 	private void SendFtp(File file) throws Exception{
 		FTPClient fTPClient = FTPUtils.getInstance().getFTPClient(ftpServer, "rppreport", "1qaz@WSX");
 		fTPClient.setFileType(fTPClient.BINARY_FILE_TYPE);
-		fTPClient.makeDirectory("/rppreport/upload/Security/P231236");
-		fTPClient.changeWorkingDirectory("/rppreport/upload/Security/P231236");
+		fTPClient.makeDirectory("/rppreport/upload/Security/P231246");
+		fTPClient.changeWorkingDirectory("/rppreport/upload/Security/P231246");
 		InputStream inputStream = new FileInputStream(file);
 		fTPClient.storeFile(file.getName(), inputStream);
 		inputStream.close();
