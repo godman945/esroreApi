@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 //import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,12 +36,12 @@ public class FetReportService extends BaseService<Object, String>	implements IFe
 		for (Map<String, String> rowDataMap : dbDataList) {
 			String jsonStr = objectMapper.writeValueAsString(rowDataMap);
 			JSONObject dataJson = jsonParser.parse(jsonStr.toString(), JSONObject.class);
-
+		
 			List<String> rowDataList = new ArrayList<String>();
 			for (EnumFetShopeeDalityReportColumn enumFetShopeeDalityReportColumn : EnumFetShopeeDalityReportColumn.values()) {
-				String data = dataJson.getAsString(enumFetShopeeDalityReportColumn.getColumn()) == null ? "" : dataJson.getAsString(enumFetShopeeDalityReportColumn.getColumn());
+				String data = dataJson.getAsString(enumFetShopeeDalityReportColumn.getColumn()) == null ||  dataJson.getAsString(enumFetShopeeDalityReportColumn.getColumn()) == "null"    ? "" : dataJson.getAsString(enumFetShopeeDalityReportColumn.getColumn());
 				//針對姓名隱碼
-				if(enumFetShopeeDalityReportColumn.getColumn().equals(EnumFetShopeeDalityReportColumn.USER_NAME.getColumn())){
+				if(StringUtils.isNotBlank(data) && enumFetShopeeDalityReportColumn.getColumn().equals(EnumFetShopeeDalityReportColumn.USER_NAME.getColumn())){
 					data = StringUtil.getInstance().getHiddenData(data);
 				}
 				//避免csv 開頭0去掉
