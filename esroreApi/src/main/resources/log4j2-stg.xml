@@ -17,12 +17,13 @@
 		</RollingRandomAccessFile>
     </appenders>
     
+   
+    
     <loggers>
         <root level="info" >
             <AppenderRef ref="Appender" />  
         	<appender-ref ref="Console" />
-        	
-        	
         </root>
+        
     </loggers>
 </configuration>

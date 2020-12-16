@@ -39,6 +39,7 @@ public class HibernateSessionConfig {
 		Properties hibernateProperties = new Properties();
 		hibernateProperties.put("hibernate.dialect", "org.hibernate.dialect.OracleDialect");
 		hibernateProperties.put("current_session_context_class", "thread");
+		hibernateProperties.put("hibernate.format_sql", false);
 		hibernateProperties.put("hibernate.show_sql", false);
 		sessionFactory.setHibernateProperties(hibernateProperties);
 		return sessionFactory;

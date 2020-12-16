@@ -1,4 +1,4 @@
-package com.fet.estore.job.report;
+package com.fet.estore.job.report.shopee;
 
 import java.io.File;
 import java.io.FileInputStream;

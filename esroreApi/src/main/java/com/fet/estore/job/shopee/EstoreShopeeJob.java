@@ -1,4 +1,4 @@
-package com.fet.estore.job;
+package com.fet.estore.job.shopee;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;

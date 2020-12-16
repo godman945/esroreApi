@@ -5,4 +5,6 @@
  <hibernate-reverse-engineering>
 	<table-filter match-name="CROSS_COOPERATION"></table-filter>
 	<table-filter match-name="CO_MASTER"></table-filter>
+	
+	<table-filter match-name="CO_MASTER_20200707_HK"></table-filter>
 </hibernate-reverse-engineering>
