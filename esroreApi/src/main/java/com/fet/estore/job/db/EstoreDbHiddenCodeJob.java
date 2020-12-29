@@ -1,16 +1,22 @@
 package com.fet.estore.job.db;
 
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
+import org.hibernate.transform.Transformers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -18,9 +24,29 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.stereotype.Component;
 
-import com.fet.db.oracle.pojo.CoMaster20200707Hk;
-import com.fet.db.oracle.service.coMaster.ICoMaster20200707HkIdService;
+import com.fet.db.oracle.pojo.CoMaster;
+import com.fet.db.oracle.pojo.CoMaster20200709Hk;
+import com.fet.db.oracle.pojo.CrossCooperation;
+import com.fet.db.oracle.pojo.FridayOrder;
+import com.fet.db.oracle.pojo.LoyaltyRecord;
+import com.fet.db.oracle.pojo.NbaCoMaster;
+import com.fet.db.oracle.pojo.NbaNameList;
+import com.fet.db.oracle.pojo.PersonalInformationBackup;
+import com.fet.db.oracle.pojo.PersonalInformationBackupId;
+import com.fet.db.oracle.pojo.TmpCoMaster;
+import com.fet.db.oracle.service.coMaster.ICoMaster20200709HkService;
 import com.fet.db.oracle.service.coMaster.ICoMasterService;
+import com.fet.db.oracle.service.coMaster.ITmpCoMasterService;
+import com.fet.db.oracle.service.crossCooperation.ICrossCooperationService;
+import com.fet.db.oracle.service.fridayOrder.IFridayOrderService;
+import com.fet.db.oracle.service.loyaltyRecord.ILoyaltyRecordService;
+import com.fet.db.oracle.service.mailingList.IMailingListService;
+import com.fet.db.oracle.service.nbaCoMaster.INbaCoMasterService;
+import com.fet.db.oracle.service.nbaNameList.INbaNameListService;
+import com.fet.db.oracle.service.ocrRecord.IOcrRecordService;
+import com.fet.db.oracle.service.soTemp.ISoTempService;
+import com.fet.db.oracle.service.sosaTemp.ISosaTempService;
+import com.fet.soft.util.AESUtil;
 import com.fet.soft.util.StringUtil;
 import com.fet.spring.init.SpringbootWebApplication;
 
@@ -31,95 +57,193 @@ public class EstoreDbHiddenCodeJob {
 
 	private Logger log = LogManager.getLogger(getClass());
 
-	@Autowired
-	private ICoMasterService coMasterService;
-	
-	
-	@Autowired
-	private ICoMaster20200707HkIdService coMaster20200707HkIdService;
-	
+	private final String encodeKey = "TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93";
+
 	@Autowired
 	private HibernateTemplate hibernateTemplate;
 	
 	@PersistenceContext
 	private EntityManager entityManager;
 	
+	@Autowired
+	private ICoMaster20200709HkService coMaster20200709HkService;
+	
+	@Autowired
+	private ICoMasterService coMasterService;
+	
+	@Autowired
+	private ITmpCoMasterService tmpCoMasterService;
+	
+	@Autowired
+	private ICrossCooperationService crossCooperationService;
+	
+	@Autowired
+	private IFridayOrderService fridayOrderService;
+	
+	@Autowired
+	private ILoyaltyRecordService loyaltyRecordService;
+
+	@Autowired
+	private IMailingListService mailingListService;
+	
+	@Autowired
+	private INbaCoMasterService nbaCoMasterService;
+	
+	@Autowired
+	private INbaNameListService nbaNameListService;
+	
+	@Autowired
+	private IOcrRecordService ocrRecordService;
+	
+	@Autowired
+	private ISosaTempService sosaTempService;
+	
+	
+	@Autowired
+	private ISoTempService soTempService;
+	
+	
+	
+
+	
 	public void process() throws Exception {
-		//1.處理co_master
+//		//1.處理CO_MASTER
 		processCoMaster();
+//		//2.處理TMP_CO_MASTER
+//		processTempCoMaster();
+		//3.處理CROSS_COOPERATION
+//		processCrossCooperation();
+		//4.處理FRIDAY_ORDER
+//		processFridayOrder();
+		//5.處理LOYALTY_RECORD
+//		processLoyaltyRecord();
+		//6.處理MAILING_LIST
+//	#	processMailingList();
+		//7.處理NBA_CO_MASTER
+//		processNbaCoMaster();
+		
+		//8.處理NBA_NAME_LIST
+//		processNbaNameList();
+		
+		//9.處理OCR_RECORD
+//	#	processOcrRecord();
+		
+		//10.處理SO_TEMP
+//	#	processSoTemp();
+		
+		//11.處理SOSA_TEMP
+//	#	processSosaTemp();
 		
 	}
 	
-//	14:54:24
-	public void processCoMaster(){
+	
+	/**
+	 * 處理CO_MASTER
+	 * */
+	public void processCoMaster() throws Exception{
+		log.info("====== CO_MASTER ENCODE START");
 		Session session = hibernateTemplate.getSessionFactory().openSession();
 		session.setFlushMode(FlushMode.MANUAL);
 		Transaction transaction = session.beginTransaction();
-//		Query query = session.createQuery("from CoMaster20200707Hk where 1=1  and ROWNUM <=10 and  activationDate is not null and TO_CHAR(activationDate,'yyyy-mm-dd') < TO_CHAR(SYSDATE-90,'yyyy-mm-dd') order by activationDate desc");
-		Query query = session.createQuery("from CoMaster20200707Hk where 1=1  and  activationDate is not null and TO_CHAR(activationDate,'yyyy-mm-dd') < TO_CHAR(SYSDATE-90,'yyyy-mm-dd') order by activationDate desc");
-		List<CoMaster20200707Hk> coMaster20200707HkList = query.list();
-		int total = coMaster20200707HkList.size();
+		Query query = session.createSQLQuery(coMasterSqlStr());
+		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String,String>> result = query.list();
+		Date date = new Date();
 		int i = 0;
-		System.out.println(total);
-		for (CoMaster20200707Hk coMaster20200707Hk : coMaster20200707HkList) {
-			
-			String userName = coMaster20200707Hk.getUserName();
-			userName = StringUtil.getInstance().getHiddenDataByName(userName);
-			String sex = String.valueOf(coMaster20200707Hk.getSex());
-			String title ="";
-			if(sex.toUpperCase().equals("M")){
-				title ="先生";
+		int total = result.size();
+		for (Map<String, String> rowDataMap : result) {
+			PersonalInformationBackup personalInformationBackup = new PersonalInformationBackup();
+			try{
+				String cono = StringUtils.isBlank(rowDataMap.get("CONO")) ? "" : rowDataMap.get("CONO");
+				log.info(">>>>>>hidden process cono:"+cono);
+				//使用者 
+				String userName = StringUtils.isBlank(rowDataMap.get("USER_NAME")) ? "" : rowDataMap.get("USER_NAME");
+				//身分證/健保卡
+				String rocId = StringUtils.isBlank(rowDataMap.get("ROC_ID")) ? "" : rowDataMap.get("ROC_ID");
+				String mail = StringUtils.isBlank(rowDataMap.get("EMAIL")) ? "" : rowDataMap.get("EMAIL");
+				//送貨聯絡電話
+				String deliTel = StringUtils.isBlank(rowDataMap.get("DELI_TEL")) ? "" : rowDataMap.get("DELI_TEL");
+				//申辦人聯絡電話一
+				String tel1 = StringUtils.isBlank(rowDataMap.get("TEL1")) ? "" : rowDataMap.get("TEL1");
+				//申辦人聯絡電話二
+				String tel2 = StringUtils.isBlank(rowDataMap.get("TTEL2")) ? "" : rowDataMap.get("TTEL2");
+				//送貨地址
+				String deliAddr = StringUtils.isBlank(rowDataMap.get("DELI_ADDR")) ? "" : rowDataMap.get("DELI_ADDR");
+				//生日
+				String birthday = StringUtils.isBlank(rowDataMap.get("BIRTHDAY")) ? "" : rowDataMap.get("BIRTHDAY");
+				//收件人
+				String reccipient = StringUtils.isBlank(rowDataMap.get("RECCIPIENT")) ? "" : rowDataMap.get("RECCIPIENT");
+				//帳單地址
+				String billAddr = StringUtils.isBlank(rowDataMap.get("BILL_ADDR")) ? "" : rowDataMap.get("BILL_ADDR");
+				//戶籍地址
+				String pAddr = StringUtils.isBlank(rowDataMap.get("P_ADDR")) ? "" : rowDataMap.get("P_ADDR");
+				//收件人
+				String deliReceive = StringUtils.isBlank(rowDataMap.get("DELI_RECEIVER")) ? "" : rowDataMap.get("DELI_RECEIVER");
+				//收件人信箱
+				String deliEmail = StringUtils.isBlank(rowDataMap.get("DELI_EMAIL")) ? "" : rowDataMap.get("DELI_EMAIL");
+				//門號
+				String msisdn = StringUtils.isBlank(rowDataMap.get("MSISDN")) ? "" : rowDataMap.get("MSISDN");
+				//複合主鍵
+				PersonalInformationBackupId personalInformationBackupId = new PersonalInformationBackupId();
+				personalInformationBackupId.setTableName("CO_MASTER");
+				personalInformationBackupId.setTablePk(cono);
+				personalInformationBackupId.setUuid(UUID.randomUUID().toString());
+				
+				personalInformationBackup.setId(personalInformationBackupId);
+				personalInformationBackup.setUserName(AESUtil.encrypt(userName, encodeKey));
+				personalInformationBackup.setRocId(AESUtil.encrypt(rocId, encodeKey));
+				personalInformationBackup.setEmail(AESUtil.encrypt(mail, encodeKey));
+				personalInformationBackup.setDeliTel(AESUtil.encrypt(deliTel, encodeKey));
+				personalInformationBackup.setTel1(AESUtil.encrypt(tel1, encodeKey));
+				personalInformationBackup.setTtel2(AESUtil.encrypt(tel2, encodeKey));
+				personalInformationBackup.setDeliAddr(AESUtil.encrypt(deliAddr, encodeKey));
+				personalInformationBackup.setBirthday(AESUtil.encrypt(birthday, encodeKey));
+				personalInformationBackup.setReccipient(AESUtil.encrypt(reccipient, encodeKey));
+				personalInformationBackup.setBillAddr(AESUtil.encrypt(billAddr, encodeKey));
+				personalInformationBackup.setPAddr(AESUtil.encrypt(pAddr, encodeKey));
+				personalInformationBackup.setDeliReceiver(AESUtil.encrypt(deliReceive, encodeKey));
+				personalInformationBackup.setDeliEmail(AESUtil.encrypt(deliEmail, encodeKey));
+				personalInformationBackup.setMsisdn(AESUtil.encrypt(msisdn, encodeKey));
+				personalInformationBackup.setUpdateDate(date);
+				
+				userName = StringUtil.getInstance().getHiddenDataByName(userName);
+				rocId = StringUtil.getInstance().getHiddenDataById(rocId);
+				mail= StringUtil.getInstance().getHiddenDataByEmail(mail);
+				deliTel = StringUtil.getInstance().getHiddenDataByNum(deliTel);
+				tel1 = StringUtil.getInstance().getHiddenDataByNum(tel1);
+				tel2 = StringUtil.getInstance().getHiddenDataByNum(tel2);
+				deliAddr = StringUtil.getInstance().getHiddenDataByAddr(deliAddr);
+				birthday = StringUtil.getInstance().getHiddenDataByBirthday(birthday);
+				reccipient = StringUtil.getInstance().getHiddenDataByName(reccipient);
+				billAddr = StringUtil.getInstance().getHiddenDataByAddr(billAddr);
+				pAddr = StringUtil.getInstance().getHiddenDataByAddr(pAddr);
+				deliReceive = StringUtil.getInstance().getHiddenDataByName(deliReceive);
+				deliEmail = StringUtil.getInstance().getHiddenDataByEmail(deliEmail);
+				msisdn = StringUtil.getInstance().getHiddenDataByNum(msisdn);
+				
+				
+				CoMaster coMaster = coMasterService.get(cono);
+				coMaster.setUserName(userName);
+				coMaster.setRocId(rocId);
+				coMaster.setEmail(mail);
+				coMaster.setDeliTel(deliTel);
+				coMaster.setTel1(tel1);
+				coMaster.setTtel2(tel2);
+				coMaster.setDeliAddr(deliAddr);
+				coMaster.setBirthday(birthday);
+				coMaster.setReccipient(reccipient);
+				coMaster.setBillAddr(billAddr);
+				coMaster.setPAddr(pAddr);
+				coMaster.setDeliReceiver(deliReceive);
+				coMaster.setDeliEmail(deliEmail);
+				coMaster.setMsisdn(msisdn);
+				
+				session.saveOrUpdate(coMaster);
+				session.saveOrUpdate(personalInformationBackup);
+			}catch(Exception e){
+				log.error(">>>>>>:"+e.getMessage());
+				continue;
 			}
-			if(sex.toUpperCase().equals("F")){
-				title ="小姐";
-			}
-			
-//			String sex = String.ValueOf(coMaster20200707Hk.getSex());
-//			userName = userName + (coMaster20200707Hk.getSex().equals(arg0))
-			coMaster20200707Hk.setUserName(userName+title);
-			
-			
-			String rocId = coMaster20200707Hk.getRocId();
-			rocId = StringUtil.getInstance().getHiddenDataById(rocId);
-			coMaster20200707Hk.setRocId(rocId);
-			
-			String mail = coMaster20200707Hk.getEmail();
-			mail= StringUtil.getInstance().getHiddenDataByEmail(mail);
-			coMaster20200707Hk.setEmail(mail);
-					
-			String deliTel = coMaster20200707Hk.getDeliTel();
-			deliTel = StringUtil.getInstance().getHiddenDataByNum(deliTel);
-			coMaster20200707Hk.setDeliTel(deliTel);
-			
-					
-			String tel1 = coMaster20200707Hk.getTel1();
-			tel1 = StringUtil.getInstance().getHiddenDataByNum(tel1);
-			coMaster20200707Hk.setTel1(tel1);
-					
-			String tel2 = coMaster20200707Hk.getTtel2();
-			tel2 = StringUtil.getInstance().getHiddenDataByNum(tel2);
-			coMaster20200707Hk.setTtel2(tel2);
-					
-			String deliAddr = coMaster20200707Hk.getDeliAddr();
-			deliAddr = StringUtil.getInstance().getHiddenDataByAddr(deliAddr);
-			coMaster20200707Hk.setDeliAddr(deliAddr);
-					
-			String birthday = coMaster20200707Hk.getBirthday();
-			birthday = StringUtil.getInstance().getHiddenDataByBirthday(birthday);
-			coMaster20200707Hk.setBirthday(birthday);
-			
-			session.saveOrUpdate(coMaster20200707Hk);
-//			System.out.println(userName+">>>>>>"+StringUtil.getInstance().getHiddenDataByName(userName));
-//			System.out.println(rocId+">>>>>>"+StringUtil.getInstance().getHiddenDataById(rocId));
-//			System.out.println(mail+">>>>>>"+StringUtil.getInstance().getHiddenDataByEmail(mail));
-//			System.out.println(deliTel+">>>>>>"+StringUtil.getInstance().getHiddenDataByNum(deliTel));
-//			System.out.println(tel1+">>>>>>"+StringUtil.getInstance().getHiddenDataByNum(tel1));
-//			System.out.println(tel2+">>>>>>"+StringUtil.getInstance().getHiddenDataByNum(tel2));
-//			System.out.println(deliAddr+">>>>>>"+StringUtil.getInstance().getHiddenDataByAddr(deliAddr));
-//			System.out.println(birthday+">>>>>>"+StringUtil.getInstance().getHiddenDataByBirthday(birthday));
-//			System.out.println("#################");
-			
-			
 			i = i + 1;
 			if(i == total){
 				session.flush();
@@ -131,6 +255,134 @@ public class EstoreDbHiddenCodeJob {
 				}
 			}
 			
+			if(i%1000 == 0){
+				System.out.println(">>>>>>>>>>>>處理完" + i + "筆");
+				 transaction.commit();
+				 transaction.begin();
+			}
+			if(i == total){
+				System.out.println(">>>>>>>>>>>>總共處理完" + i + "筆");
+				transaction.commit();
+			}
+		}
+		log.info("====== CO_MASTER ENCODE FINISH");
+	}
+	
+	/**
+	 * 處理TMP_CO_MASTER
+	 * */
+	public void processTempCoMaster() throws Exception{
+		log.info("====== TMP_CO_MASTER ENCODE START");
+		Session session = hibernateTemplate.getSessionFactory().openSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		Transaction transaction = session.beginTransaction();
+		Query query = session.createSQLQuery(tmpCoMasterSqlStr());
+		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String,String>> result = query.list();
+		Date date = new Date();
+		int i = 0;
+		int total = result.size();
+		for (Map<String, String> rowDataMap : result) {
+			PersonalInformationBackup personalInformationBackup = new PersonalInformationBackup();
+			try{
+				String cono = StringUtils.isBlank(rowDataMap.get("CONO")) ? "" : rowDataMap.get("CONO");
+				//使用者 
+				String userName = StringUtils.isBlank(rowDataMap.get("USER_NAME")) ? "" : rowDataMap.get("USER_NAME");
+				//身分證/健保卡
+				String rocId = StringUtils.isBlank(rowDataMap.get("ROC_ID")) ? "" : rowDataMap.get("ROC_ID");
+				String mail = StringUtils.isBlank(rowDataMap.get("EMAIL")) ? "" : rowDataMap.get("EMAIL");
+				//送貨聯絡電話
+				String deliTel = StringUtils.isBlank(rowDataMap.get("DELI_TEL")) ? "" : rowDataMap.get("DELI_TEL");
+				//申辦人聯絡電話一
+				String tel1 = StringUtils.isBlank(rowDataMap.get("TEL1")) ? "" : rowDataMap.get("TEL1");
+				//申辦人聯絡電話二
+				String tel2 = StringUtils.isBlank(rowDataMap.get("TTEL2")) ? "" : rowDataMap.get("TTEL2");
+				//送貨地址
+				String deliAddr = StringUtils.isBlank(rowDataMap.get("DELI_ADDR")) ? "" : rowDataMap.get("DELI_ADDR");
+				//生日
+				String birthday = StringUtils.isBlank(rowDataMap.get("BIRTHDAY")) ? "" : rowDataMap.get("BIRTHDAY");
+				//收件人
+				String reccipient = StringUtils.isBlank(rowDataMap.get("RECCIPIENT")) ? "" : rowDataMap.get("RECCIPIENT");
+				//帳單地址
+				String billAddr = StringUtils.isBlank(rowDataMap.get("BILL_ADDR")) ? "" : rowDataMap.get("BILL_ADDR");
+				//戶籍地址
+				String pAddr = StringUtils.isBlank(rowDataMap.get("P_ADDR")) ? "" : rowDataMap.get("P_ADDR");
+				//收件人
+				String deliReceive = StringUtils.isBlank(rowDataMap.get("DELI_RECEIVER")) ? "" : rowDataMap.get("DELI_RECEIVER");
+				//收件人信箱
+				String deliEmail = StringUtils.isBlank(rowDataMap.get("DELI_EMAIL")) ? "" : rowDataMap.get("DELI_EMAIL");
+				//門號
+				String msisdn = StringUtils.isBlank(rowDataMap.get("MSISDN")) ? "" : rowDataMap.get("MSISDN");
+				//複合主鍵
+				PersonalInformationBackupId personalInformationBackupId = new PersonalInformationBackupId();
+				personalInformationBackupId.setTableName("TMP_CO_MASTER");
+				personalInformationBackupId.setTablePk(cono);
+				personalInformationBackupId.setUuid(UUID.randomUUID().toString());
+				
+				personalInformationBackup.setId(personalInformationBackupId);
+				personalInformationBackup.setUserName(AESUtil.encrypt(userName, encodeKey));
+				personalInformationBackup.setRocId(AESUtil.encrypt(rocId, encodeKey));
+				personalInformationBackup.setEmail(AESUtil.encrypt(mail, encodeKey));
+				personalInformationBackup.setDeliTel(AESUtil.encrypt(deliTel, encodeKey));
+				personalInformationBackup.setTel1(AESUtil.encrypt(tel1, encodeKey));
+				personalInformationBackup.setTtel2(AESUtil.encrypt(tel2, encodeKey));
+				personalInformationBackup.setDeliAddr(AESUtil.encrypt(deliAddr, encodeKey));
+				personalInformationBackup.setBirthday(AESUtil.encrypt(birthday, encodeKey));
+				personalInformationBackup.setReccipient(AESUtil.encrypt(reccipient, encodeKey));
+				personalInformationBackup.setBillAddr(AESUtil.encrypt(billAddr, encodeKey));
+				personalInformationBackup.setPAddr(AESUtil.encrypt(pAddr, encodeKey));
+				personalInformationBackup.setDeliReceiver(AESUtil.encrypt(deliReceive, encodeKey));
+				personalInformationBackup.setDeliEmail(AESUtil.encrypt(deliEmail, encodeKey));
+				personalInformationBackup.setMsisdn(AESUtil.encrypt(msisdn, encodeKey));
+				personalInformationBackup.setUpdateDate(date);
+				
+				userName = StringUtil.getInstance().getHiddenDataByName(userName);
+				rocId = StringUtil.getInstance().getHiddenDataById(rocId);
+				mail= StringUtil.getInstance().getHiddenDataByEmail(mail);
+				deliTel = StringUtil.getInstance().getHiddenDataByNum(deliTel);
+				tel1 = StringUtil.getInstance().getHiddenDataByNum(tel1);
+				tel2 = StringUtil.getInstance().getHiddenDataByNum(tel2);
+				deliAddr = StringUtil.getInstance().getHiddenDataByAddr(deliAddr);
+				birthday = StringUtil.getInstance().getHiddenDataByBirthday(birthday);
+				reccipient = StringUtil.getInstance().getHiddenDataByName(reccipient);
+				billAddr = StringUtil.getInstance().getHiddenDataByAddr(billAddr);
+				pAddr = StringUtil.getInstance().getHiddenDataByAddr(pAddr);
+				deliReceive = StringUtil.getInstance().getHiddenDataByName(deliReceive);
+				deliEmail = StringUtil.getInstance().getHiddenDataByEmail(deliEmail);
+				msisdn = StringUtil.getInstance().getHiddenDataByNum(msisdn);
+				
+				TmpCoMaster tmpCoMaster = tmpCoMasterService.get(cono);
+				tmpCoMaster.setUserName(userName);
+				tmpCoMaster.setRocId(rocId);
+				tmpCoMaster.setEmail(mail);
+				tmpCoMaster.setDeliTel(deliTel);
+				tmpCoMaster.setTel1(tel1);
+				tmpCoMaster.setTtel2(tel2);
+				tmpCoMaster.setDeliAddr(deliAddr);
+				tmpCoMaster.setBirthday(birthday);
+				tmpCoMaster.setReccipient(reccipient);
+				tmpCoMaster.setBillAddr(billAddr);
+				tmpCoMaster.setPAddr(pAddr);
+				tmpCoMaster.setDeliReceiver(deliReceive);
+				tmpCoMaster.setDeliEmail(deliEmail);
+				tmpCoMaster.setMsisdn(msisdn);
+				
+				session.saveOrUpdate(tmpCoMaster);
+				session.saveOrUpdate(personalInformationBackup);
+			}catch(Exception e){
+				log.error(">>>>>>:"+e.getMessage());
+				continue;
+			}
+			i = i + 1;
+			if(i == total){
+				session.flush();
+	            session.clear();
+			}else{
+				if(i % 500 == 0){
+		            session.flush();
+		            session.clear();
+				}
+			}
 			
 			if(i%1000 == 0){
 				System.out.println(">>>>>>>>>>>>處理完" + i + "筆");
@@ -140,312 +392,664 @@ public class EstoreDbHiddenCodeJob {
 			}
 		}
 		transaction.commit();
+		log.info("====== TMP_CO_MASTER ENCODE FINISH");
 	}
 	
-
-//	@Autowired
-//	ICrossCooperationService crossCooperationService;
-//	
-//	@Autowired
-//	private ICoMasterService coMasterService;
-//
-//	private Timestamp jobTimeStamp = new Timestamp(System.currentTimeMillis());
-//	
-//	@Value("${shopee.order.api}")
-//	private String orderApi;
-//	
-//	@Value("${shopee.valid.hours}")
-//	private int validHours;
-//	
-//	@Value("${spring.profiles.active}")
-//	private String activeEnv;
+	
+	/**
+	 * 處理CROSS_COOPERATION
+	 * */
+	public void processCrossCooperation() throws Exception{
+		log.info("====== CROSS_COOPERATION ENCODE START");
+		Session session = hibernateTemplate.getSessionFactory().openSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		Transaction transaction = session.beginTransaction();
+		Query query = session.createSQLQuery(crossCooperationSqlStr());
+		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String,String>> result = query.list();
+		Date date = new Date();
+		int i = 0;
+		int total = result.size();
+		for (Map<String, String> rowDataMap : result) {
+			PersonalInformationBackup personalInformationBackup = new PersonalInformationBackup();
+			try{
+				String orderNo = StringUtils.isBlank(rowDataMap.get("ORDER_NO")) ? "" : rowDataMap.get("ORDER_NO");
+				String userName = StringUtils.isBlank(rowDataMap.get("USER_NAME")) ? "" : rowDataMap.get("USER_NAME");
+				String userMobile = StringUtils.isBlank(rowDataMap.get("USER_MOBILE")) ? "" : rowDataMap.get("USER_MOBILE");
+				String msisdn = StringUtils.isBlank(rowDataMap.get("MSISDN")) ? "" : rowDataMap.get("MSISDN");
+				
+				//複合主鍵
+				PersonalInformationBackupId personalInformationBackupId = new PersonalInformationBackupId();
+				personalInformationBackupId.setTableName("CROSS_COOPERATION");
+				personalInformationBackupId.setTablePk(orderNo);
+				personalInformationBackupId.setUuid(UUID.randomUUID().toString());
+				
+				personalInformationBackup.setId(personalInformationBackupId);
+				personalInformationBackup.setUserName(AESUtil.encrypt(userName, encodeKey));
+				personalInformationBackup.setUserMobile(AESUtil.encrypt(userMobile, encodeKey));
+				personalInformationBackup.setMsisdn(AESUtil.encrypt(msisdn, encodeKey));
+				personalInformationBackup.setUpdateDate(date);
+				
+				
+				userName = StringUtil.getInstance().getHiddenDataByName(userName);
+				userMobile = StringUtil.getInstance().getHiddenDataByNum(userMobile);
+				msisdn = StringUtil.getInstance().getHiddenDataByNum(msisdn);
+				
+				CrossCooperation crossCooperation = crossCooperationService.get(orderNo);
+				crossCooperation.setUserName(userName);
+				crossCooperation.setUserMobile(userMobile);
+				crossCooperation.setMsisdn(msisdn);
+				
+				session.saveOrUpdate(crossCooperation);
+				session.saveOrUpdate(personalInformationBackup);
+			}catch(Exception e){
+				log.error(">>>>>>:"+e.getMessage());
+				continue;
+			}
+			i = i + 1;
+			if(i == total){
+				session.flush();
+	            session.clear();
+			}else{
+				if(i % 500 == 0){
+		            session.flush();
+		            session.clear();
+				}
+			}
+			
+			if(i%1000 == 0){
+				System.out.println(">>>>>>>>>>>>處理完" + i + "筆");
+			}
+			if(i == total){
+				System.out.println(">>>>>>>>>>>>總共處理完" + i + "筆");
+			}
+		}
+		transaction.commit();
+		log.info("====== CROSS_COOPERATION ENCODE FINISH");
+	}
+	
+	/**
+	 * 處理FRIDAY_ORDER
+	 * */
+	public void processFridayOrder() throws Exception{
+		log.info("====== FRIDAY_ORDER ENCODE START");
+		Session session = hibernateTemplate.getSessionFactory().openSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		Transaction transaction = session.beginTransaction();
+		Query query = session.createSQLQuery(fridayOrderSqlStr());
+		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String,String>> result = query.list();
+		Date date = new Date();
+		int i = 0;
+		int total = result.size();
+		for (Map<String, String> rowDataMap : result) {
+			PersonalInformationBackup personalInformationBackup = new PersonalInformationBackup();
+			try{
+				String id = StringUtils.isBlank(rowDataMap.get("ID")) ? "" : rowDataMap.get("ID");
+				String chineseName = StringUtils.isBlank(rowDataMap.get("CHINESE_NAME")) ? "" : rowDataMap.get("CHINESE_NAME");
+				String email = StringUtils.isBlank(rowDataMap.get("EMAIL")) ? "" : rowDataMap.get("EMAIL");
+				String msisdn = StringUtils.isBlank(rowDataMap.get("MSISDN")) ? "" : rowDataMap.get("MSISDN");
+				String address = StringUtils.isBlank(rowDataMap.get("ADDRESS")) ? "" : rowDataMap.get("ADDRESS");
+				
+//				//複合主鍵
+				PersonalInformationBackupId personalInformationBackupId = new PersonalInformationBackupId();
+				personalInformationBackupId.setTableName("FRIDAY_ORDER");
+				personalInformationBackupId.setTablePk(id);
+				personalInformationBackupId.setUuid(UUID.randomUUID().toString());
+				
+				personalInformationBackup.setId(personalInformationBackupId);
+				personalInformationBackup.setChineseName(AESUtil.encrypt(chineseName, encodeKey));
+				personalInformationBackup.setEmail(AESUtil.encrypt(email, encodeKey));
+				personalInformationBackup.setMsisdn(AESUtil.encrypt(msisdn, encodeKey));
+				personalInformationBackup.setAddress(AESUtil.encrypt(address, encodeKey));
+				personalInformationBackup.setUpdateDate(date);
+				
+				
+				chineseName = StringUtil.getInstance().getHiddenDataByName(chineseName);
+				email = StringUtil.getInstance().getHiddenDataByEmail(email);
+				msisdn = StringUtil.getInstance().getHiddenDataByNum(msisdn);
+				address = StringUtil.getInstance().getHiddenDataByAddr(address);
+				
+				FridayOrder fridayOrder = fridayOrderService.get(id);
+				fridayOrder.setChineseName(chineseName);
+				fridayOrder.setEmail(email);
+				fridayOrder.setMsisdn(msisdn);
+				fridayOrder.setAddress(address);
+//				
+				session.saveOrUpdate(fridayOrder);
+				session.saveOrUpdate(personalInformationBackup);
+			}catch(Exception e){
+				log.error(">>>>>>:"+e.getMessage());
+				continue;
+			}
+			i = i + 1;
+			if(i == total){
+				session.flush();
+	            session.clear();
+			}else{
+				if(i % 500 == 0){
+		            session.flush();
+		            session.clear();
+				}
+			}
+			
+			if(i%1000 == 0){
+				System.out.println(">>>>>>>>>>>>處理完" + i + "筆");
+			}
+			if(i == total){
+				System.out.println(">>>>>>>>>>>>總共處理完" + i + "筆");
+			}
+		}
+		transaction.commit();
+		log.info("====== FRIDAY_ORDER ENCODE FINISH");
+	}
+	
+	/**
+	 * 處理LOYALTY_RECORD
+	 * */
+	public void processLoyaltyRecord() throws Exception{
+		log.info("====== LOYALTY_RECORD ENCODE START");
+		Session session = hibernateTemplate.getSessionFactory().openSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		Transaction transaction = session.beginTransaction();
+		Query query = session.createSQLQuery(loyaltyRecordSqlStr());
+		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String,String>> result = query.list();
+		Date date = new Date();
+		int i = 0;
+		int total = result.size();
+		for (Map<String, String> rowDataMap : result) {
+			PersonalInformationBackup personalInformationBackup = new PersonalInformationBackup();
+			try{
+				String id = StringUtils.isBlank(rowDataMap.get("ID")) ? "" : rowDataMap.get("ID");
+				String msisdn = StringUtils.isBlank(rowDataMap.get("MSISDN")) ? "" : rowDataMap.get("MSISDN");
+				String rocId = StringUtils.isBlank(rowDataMap.get("ROCID")) ? "" : rowDataMap.get("ROCID");
+				
+//				//複合主鍵
+				PersonalInformationBackupId personalInformationBackupId = new PersonalInformationBackupId();
+				personalInformationBackupId.setTableName("LOYALTY_RECORD");
+				personalInformationBackupId.setTablePk(id);
+				personalInformationBackupId.setUuid(UUID.randomUUID().toString());
+				
+				personalInformationBackup.setId(personalInformationBackupId);
+				personalInformationBackup.setMsisdn(AESUtil.encrypt(msisdn, encodeKey));
+				personalInformationBackup.setRocId(AESUtil.encrypt(rocId, encodeKey));
+				personalInformationBackup.setUpdateDate(date);
+				
+				
+				msisdn = StringUtil.getInstance().getHiddenDataByNum(msisdn);
+				rocId = StringUtil.getInstance().getHiddenDataById(rocId);
+				
+				LoyaltyRecord loyaltyRecord = loyaltyRecordService.get(id);
+				loyaltyRecord.setMsisdn(msisdn);
+				loyaltyRecord.setRocid(rocId);
+				
+				
+				session.saveOrUpdate(loyaltyRecord);
+				session.saveOrUpdate(personalInformationBackup);
+			}catch(Exception e){
+				log.error(">>>>>>:"+e.getMessage());
+				continue;
+			}
+			i = i + 1;
+			if(i == total){
+				session.flush();
+	            session.clear();
+			}else{
+				if(i % 500 == 0){
+		            session.flush();
+		            session.clear();
+				}
+			}
+			
+			if(i%1000 == 0){
+				System.out.println(">>>>>>>>>>>>處理完" + i + "筆");
+			}
+			if(i == total){
+				System.out.println(">>>>>>>>>>>>總共處理完" + i + "筆");
+			}
+		}
+		transaction.commit();
+		log.info("====== LOYALTY_RECORD ENCODE FINISH");
+	}
 	
 	
-	
-	
-	
-//	@Transactional
-//	public void process() throws Exception {
-//		try {
-//			log.info("========EstoreShopeeJob.process() START========");
-//			
-//			log.info(">>>>>> env:"+activeEnv);
-//			log.info(">>>>>> validHours:"+validHours);
-//			
-//			
-//			//1.執行過時資料訂單取消API
-//			processCancelOverTimeOrder();
-//			
-//			//2.訂單狀態為C 呼叫蝦皮取消訂單
-//			processCancelOrder();
-//			
-//			//3.執行CO_STATUS狀態且IA_STATUS不為C
-//			processCoMasterOrdeForApi();
-//			
-//			log.info("========EstoreShopeeJob.process() END========");
-//		}catch (Exception e) {
-//			e.printStackTrace();
-//			log.error(e);
-//		}
-//	}
-//	
-//	/**
-//	 * 1.CO_MASTER IA_STATUS為 D 且 CROSS_COOPERATION ORDER_STATUS不同IA_STATUS
-//	 * 2.呼叫蝦皮取消訂單
-//	 * TGA狀態異動CO_STATUS,IA_STATUS 無法異動到 CROSS_COOPERATION中CO_STATUS,IA_STATUS
-//	 * */
-//	public void processCancelOrder() {
-//		Map<String,String> errResultData = null;
-//		try {
-//			log.info(">>>>>> START");
-//			Date date = new Date();
-//			
-//			Map<String,String> paramaterMap = new HashMap<String,String>();
-//			
-//			List<Map<String, String>> dataList = crossCooperationService.findCancelOrderDataStatus();
-//			
-//			Iterator<Map<String, String>> coStatusDataIterator = dataList.iterator();
-//			while (coStatusDataIterator.hasNext()) {
-//				paramaterMap.clear();
-//				Map<String,String> resultData = coStatusDataIterator.next();
-//				errResultData = null;
-//				errResultData = resultData;
+	/**
+	 * 處理MAILING_LIST
+	 * */
+	public void processMailingList() throws Exception{
+		log.info("====== MAILING_LIST ENCODE START");
+//		Session session = hibernateTemplate.getSessionFactory().openSession();
+//		session.setFlushMode(FlushMode.MANUAL);
+//		Transaction transaction = session.beginTransaction();
+//		Query query = session.createSQLQuery(loyaltyRecordSqlStr());
+//		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+//		List<Map<String,String>> result = query.list();
+//		Date date = new Date();
+//		int i = 0;
+//		int total = result.size();
+//		for (Map<String, String> rowDataMap : result) {
+//			PersonalInformationBackup personalInformationBackup = new PersonalInformationBackup();
+//			try{
+//				String id = StringUtils.isBlank(rowDataMap.get("ID")) ? "" : rowDataMap.get("ID");
+//				String msisdn = StringUtils.isBlank(rowDataMap.get("MSISDN")) ? "" : rowDataMap.get("MSISDN");
+//				String rocId = StringUtils.isBlank(rowDataMap.get("ROCID")) ? "" : rowDataMap.get("ROCID");
+//				
+////				//複合主鍵
+//				PersonalInformationBackupId personalInformationBackupId = new PersonalInformationBackupId();
+//				personalInformationBackupId.setTableName("LOYALTY_RECORD");
+//				personalInformationBackupId.setTablePk(id);
+//				personalInformationBackupId.setUuid(UUID.randomUUID().toString());
+//				
+//				personalInformationBackup.setId(personalInformationBackupId);
+//				personalInformationBackup.setMsisdn(AESUtil.encrypt(msisdn, encodeKey));
+//				personalInformationBackup.setRocId(AESUtil.encrypt(rocId, encodeKey));
+//				personalInformationBackup.setUpdateDate(date);
 //				
 //				
-//				String orderSN =  resultData.get("ORDER_NO");
-//				String coStatus = EnumFetOrderStatus.FET_CNL.getType();
-//				String logistics = "";
-//				String logisticsNo = "";
+//				msisdn = StringUtil.getInstance().getHiddenDataByNum(msisdn);
+//				rocId = StringUtil.getInstance().getHiddenDataById(rocId);
 //				
-//				paramaterMap.put("orderSN", orderSN);
-//				paramaterMap.put("status", coStatus);
-//				paramaterMap.put("logistics", logistics);
-//				paramaterMap.put("logisticsNo", logisticsNo);
+//				LoyaltyRecord loyaltyRecord = loyaltyRecordService.get(id);
+//				loyaltyRecord.setMsisdn(msisdn);
+//				loyaltyRecord.setRocid(rocId);
 //				
-//				boolean apiflag = callShopeeApi(paramaterMap);
-//				if(apiflag) {
-//					String masterCoStatus = StringUtils.isBlank(resultData.get("CO_MASTER_CO_STATUS")) || resultData.get("CO_MASTER_CO_STATUS").equals("null") ? "" :resultData.get("CO_MASTER_CO_STATUS");
-//					String masterIaStatus = StringUtils.isBlank(resultData.get("CO_MASTER_IA_STATUS")) || resultData.get("CO_MASTER_IA_STATUS").equals("null") ? "" :resultData.get("CO_MASTER_IA_STATUS");
-//					CrossCooperation crossCooperation = crossCooperationService.get(orderSN);
-//					crossCooperation.setCancelFlag("Y");
-//					crossCooperation.setOrderStatus(coStatus);
-//					crossCooperation.setUpdateDate(date);
-//					crossCooperation.setCoStatus(masterCoStatus);
-//					crossCooperation.setIaStatus(masterIaStatus);
-//					crossCooperationService.saveOrUpdate(crossCooperation);
-//				}else {
-//					log.info(">>>>>> API FAIL POST DATA:"+paramaterMap);
+//				
+//				session.saveOrUpdate(loyaltyRecord);
+//				session.saveOrUpdate(personalInformationBackup);
+//			}catch(Exception e){
+//				log.error(">>>>>>:"+e.getMessage());
+//				continue;
+//			}
+//			i = i + 1;
+//			if(i == total){
+//				session.flush();
+//	            session.clear();
+//			}else{
+//				if(i % 500 == 0){
+//		            session.flush();
+//		            session.clear();
 //				}
 //			}
-//			log.info(">>>>>> END");
-//		} catch (Exception e) {
-//			log.error(">>>>>> PROCESS FAIL DATA:" + errResultData);
-//			log.error(">>>>>> PROCESS FAIL:" + e.getMessage());
-//			e.printStackTrace();
-//		}
-//	}
-//	
-//
-//	/**
-//	 * 訂單成立後呼叫蝦皮API傳送狀態
-//	 * TGR,BCS狀態會與master co_status不同
-//	 * 
-//	 * 發送shopee狀態記錄在co_status
-//	 * 訂單狀態維護在order_status用來比對co_master是否異動
-//	 * 
-//	 * */
-//	public void processCoMasterOrdeForApi() {
-//		Map<String,String> errResultData = null;
-//		try {
-//			log.info(">>>>>> START");
 //			
-//			List<String> coStatusList = new ArrayList<String>();
-//			coStatusList.add(EnumFetOrderStatus.FET_BD.getType());
-//			coStatusList.add(EnumFetOrderStatus.FET_BO.getType());
-//			coStatusList.add(EnumFetOrderStatus.FET_TI.getType());
-//			coStatusList.add(EnumFetOrderStatus.FET_TGR.getType());
-//			coStatusList.add(EnumFetOrderStatus.FET_TGA.getType());
-//			Map<String,String> paramaterMap = new HashMap<String,String>();
-//			Date date = new Date();
-//			
-//			List<Map<String,String>> coStatusDataMapList = coMasterService.findCoMasterOrderDataForApi(coStatusList);
-//
-//			Iterator<Map<String, String>> coStatusDataIterator = coStatusDataMapList.iterator();
-//			while (coStatusDataIterator.hasNext()) {
-//				paramaterMap.clear();
-//				Map<String,String> resultData = coStatusDataIterator.next();
-//				errResultData = null;
-//				errResultData = resultData;
-//				
-//				
-//				String orderSN =  resultData.get("ORDER_NO");
-//				String masterCoStatus = StringUtils.isBlank(resultData.get("MASTER_CO_STATUS")) || resultData.get("MASTER_CO_STATUS").equals("null") ? "" :resultData.get("MASTER_CO_STATUS");
-//				String masterIaStatus = StringUtils.isBlank(resultData.get("MASTER_IA_STATUS")) || resultData.get("MASTER_IA_STATUS").equals("null") ? "" :resultData.get("MASTER_IA_STATUS");
-//				String crossCooperationCoStatus = StringUtils.isBlank(resultData.get("CROSS_COOPERATION_CO_STATUS")) || resultData.get("CROSS_COOPERATION_CO_STATUS").equals("null") ? "" :resultData.get("CROSS_COOPERATION_CO_STATUS");
-//				String logistics = StringUtils.isBlank(resultData.get("PROVIDER_NAME")) || resultData.get("PROVIDER_NAME").equals("null") ? "" :resultData.get("PROVIDER_NAME");
-//				String logisticsNo = StringUtils.isBlank(resultData.get("SHIPMENT_NO")) || resultData.get("SHIPMENT_NO").equals("null") ? "" :resultData.get("SHIPMENT_NO");
-//				String csStoreNo = StringUtils.isBlank(resultData.get("CS_STORE_NO")) || resultData.get("CS_STORE_NO").equals("null") ? "" :resultData.get("CS_STORE_NO");
-//				String orderStatus = StringUtils.isBlank(resultData.get("MASTER_CO_STATUS")) || resultData.get("MASTER_CO_STATUS").equals("null") ? "" :resultData.get("MASTER_CO_STATUS");
-//				
-//				
-//				//狀態為BD時已有配送資料則送BCS
-//				if(masterCoStatus.equals(EnumFetOrderStatus.FET_BD.getType()) && StringUtils.isNotBlank(csStoreNo)) {
-//					orderStatus = EnumFetOrderStatus.FET_BCS.getType();
-//				}
-//				//CO_STATUS狀態為TGA送TI
-//				if(masterCoStatus.equals(EnumFetOrderStatus.FET_TGA.getType())) {
-//					orderStatus = EnumFetOrderStatus.FET_TI.getType();
-//				}
-//				
-//				//IA_STATUS狀態為D送TGR
-//				if(masterIaStatus.equals(EnumFetIaStatus.FET_D.getType())) {
-//					orderStatus = EnumFetOrderStatus.FET_TGR.getType();
-//				}
-//				
-//				//判斷是否已經發送過TI
-//				if(crossCooperationCoStatus.equals(EnumFetOrderStatus.FET_TI.getType()) && masterCoStatus.equals(EnumFetOrderStatus.FET_TGA.getType())){
-//					CrossCooperation crossCooperation = crossCooperationService.get(orderSN);
-//					crossCooperation.setCancelFlag("");
-//					crossCooperation.setOrderStatus(orderStatus);
-//					crossCooperation.setCoStatus(masterCoStatus);
-//					crossCooperation.setIaStatus(masterIaStatus);
-//					crossCooperation.setUpdateDate(date);
-//					continue;
-//				}
-//				
-//				paramaterMap.put("orderSN", orderSN);
-//				paramaterMap.put("status", orderStatus);
-//				paramaterMap.put("logistics", logistics);
-//				paramaterMap.put("logisticsNo", logisticsNo);
-//				
-//				boolean apiflag = callShopeeApi(paramaterMap);
-//				if(apiflag) {
-//					CrossCooperation crossCooperation = crossCooperationService.get(orderSN);
-//					crossCooperation.setCancelFlag("");
-//					crossCooperation.setOrderStatus(orderStatus);
-//					crossCooperation.setCoStatus(masterCoStatus);
-//					crossCooperation.setIaStatus(masterIaStatus);
-//					crossCooperation.setUpdateDate(date);
-//				}else {
-//					log.info(">>>>>> API FAIL POST DATA:"+paramaterMap);
-//				}
+//			if(i%1000 == 0){
+//				System.out.println(">>>>>>>>>>>>處理完" + i + "筆");
+//				transaction.commit();
+//				transaction.begin();
 //			}
-//			log.info(">>>>>> END");
-//		}catch(Exception e) {
-//			log.error(">>>>>> PROCESS FAIL DATA:" + errResultData);
-//			log.error(">>>>>> PROCESS FAIL:" + e.getMessage());
-//			e.printStackTrace();
-//		}
-//	}
-//	
-//	/**
-//	 * 過時訂單取消狀態
-//	 * */
-//	public void processCancelOverTimeOrder() {
-//		try {
-//			log.info(">>>>>> START");
-//			List<CrossCooperation> crossCooperationList = crossCooperationService.findShopeeCancelOverTimeData();
-//			int index = 0;
-//			int processTotal = 0;
-//			int notProcessTotal = 0;
-//			int failTotal = 0;
-//			
-//			Map<String,String> paramaterMap = new HashMap<String,String>();
-//			
-//			log.info(">>>>>>total process size:" + crossCooperationList.size());
-//			Iterator<CrossCooperation> crossCooperationIterator = crossCooperationList.iterator();
-//			while (crossCooperationIterator.hasNext()) {
-//				
-//				paramaterMap.clear();
-//				long startTime = System.currentTimeMillis();
-//				index = index + 1;
-//				log.info(">>>>>>START PROCESS ITEM:" + index);
-//				try {
-//					CrossCooperation crossCooperation = crossCooperationIterator.next();
-//					log.info(">>>>>>getCono:" + crossCooperation.getCono());
-//					log.info(">>>>>>getOrderNo:" + crossCooperation.getOrderNo());
-//
-//					Timestamp timestam = new Timestamp(Long.valueOf(crossCooperation.getCreateTimestamp()));
-//					SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//					String format1 = simpleDateFormat.format(timestam);
-//					log.info(">>>>>>CREATE TIME:" + format1);
-//
-//					// 取得是否合法小時
-//					boolean hoursflag = isValidHours(timestam, jobTimeStamp);
-//
-//					if (hoursflag) {
-//						// 開始呼叫API
-//						paramaterMap.put("orderSN", crossCooperation.getOrderNo());
-//						paramaterMap.put("status", EnumFetOrderStatus.FET_CNL24.getType());
-//						paramaterMap.put("logistics", "");
-//						paramaterMap.put("logisticsNo", "");
-//						System.out.println(">>>>>>>>>>>>>>>>"+paramaterMap);
-//							boolean apiflag = callShopeeApi(paramaterMap);
-//							if(apiflag) {
-//								crossCooperation.setCancelFlag("Y");
-//								crossCooperation.setOrderStatus(EnumFetOrderStatus.FET_CNL24.getType());
-//								crossCooperation.setUpdateDate(new Date());
-//								crossCooperationService.saveOrUpdate(crossCooperation);
-//								processTotal = processTotal + 1;
-//							}else {
-//								log.info(">>>>>> API FAIL POST DATA:"+paramaterMap);
-//							}
-//					}
-//					
-//					//驗證用
-//					else {
-//						notProcessTotal = notProcessTotal + 1;
-//					}
-//					
-//					long endTime = System.currentTimeMillis();
-//					log.info(">>>>>>ITEM COST MS:"+(endTime - startTime) );
-//				} catch (Exception e) {
-//					failTotal = failTotal + 1;
-//					log.error(">>>>>>FAIL PROCESS:"+e.getMessage());
-//				}
-//				log.info(">>>>>>END PROCESS ITEM:" + index);
+//			if(i == total){
+//				System.out.println(">>>>>>>>>>>>總共處理完" + i + "筆");
+//				transaction.commit();
 //			}
-//			
-//			
-//			log.info("*********************");
-//			log.info(">>>>>>TOTAL:"+crossCooperationList.size());
-//			log.info(">>>>>>PROCESS TOTAL:" + processTotal);
-//			log.info(">>>>>>NOT NEED PROCESS TOTAL:" + notProcessTotal);
-//			log.info(">>>>>>FAIL TOTAL:" + failTotal);
-//			log.info("*********************");
-//			
-//			log.info(">>>>>> END");
-//		}catch(Exception e) {
-//			log.error(e.getMessage());
-//			e.printStackTrace();
 //		}
-//	}
-//	
-//	/*
-//	 * 呼叫蝦皮API
-//	 */
-//	public boolean callShopeeApi(Map<String,String> paramaterMap) throws Exception {
-//		String result = RestTemplateUtil.getInstance().doPost(orderApi, MediaType.APPLICATION_JSON, paramaterMap);
-//		JSONObject resultJson = new JSONObject(result);
-//		if (resultJson.get("rtnCode").equals("00000")) {
-//			return true;
-//		}
-//		return false;
-//	}
-//
-//	/**
-//	 * 檢查是否超過時間
-//	 */
-//	public boolean isValidHours(Timestamp createTimestamp, Timestamp jobTimestamp) throws Exception {
-//		long diff = (jobTimestamp.getTime() - createTimestamp.getTime());
-//		long hours = diff / (1000 * 60 * 60);
-//		if (hours > validHours) {
-//			return true;
-//		} else {
-//			return false;
-//		}
-//	}
-//
+//		
+//		log.info("====== MAILING_LIST ENCODE FINISH");
+	}
+	
+	/**
+	 * 處理NBA_CO_MASTER
+	 * */
+	public void processNbaCoMaster() throws Exception{
+		log.info("====== NBA_CO_MASTER ENCODE START");
+		Session session = hibernateTemplate.getSessionFactory().openSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		Transaction transaction = session.beginTransaction();
+		Query query = session.createSQLQuery(nbaCoMasterSqlStr());
+		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String,String>> result = query.list();
+		Date date = new Date();
+		int i = 0;
+		int total = result.size();
+		for (Map<String, String> rowDataMap : result) {
+			PersonalInformationBackup personalInformationBackup = new PersonalInformationBackup();
+			try{
+				String cono = StringUtils.isBlank(rowDataMap.get("CONO")) ? "" : rowDataMap.get("CONO");
+				//使用者 
+				String userName = StringUtils.isBlank(rowDataMap.get("USER_NAME")) ? "" : rowDataMap.get("USER_NAME");
+				//身分證/健保卡
+				String rocId = StringUtils.isBlank(rowDataMap.get("ROC_ID")) ? "" : rowDataMap.get("ROC_ID");
+				String mail = StringUtils.isBlank(rowDataMap.get("EMAIL")) ? "" : rowDataMap.get("EMAIL");
+				//送貨聯絡電話
+				String deliTel = StringUtils.isBlank(rowDataMap.get("DELI_TEL")) ? "" : rowDataMap.get("DELI_TEL");
+				//申辦人聯絡電話一
+				String tel1 = StringUtils.isBlank(rowDataMap.get("TEL1")) ? "" : rowDataMap.get("TEL1");
+				//申辦人聯絡電話二
+				String tel2 = StringUtils.isBlank(rowDataMap.get("TTEL2")) ? "" : rowDataMap.get("TTEL2");
+				//送貨地址
+				String deliAddr = StringUtils.isBlank(rowDataMap.get("DELI_ADDR")) ? "" : rowDataMap.get("DELI_ADDR");
+				//生日
+				String birthday = StringUtils.isBlank(rowDataMap.get("BIRTHDAY")) ? "" : rowDataMap.get("BIRTHDAY");
+				//收件人
+				String reccipient = StringUtils.isBlank(rowDataMap.get("RECCIPIENT")) ? "" : rowDataMap.get("RECCIPIENT");
+				//帳單地址
+				String billAddr = StringUtils.isBlank(rowDataMap.get("BILL_ADDR")) ? "" : rowDataMap.get("BILL_ADDR");
+				//戶籍地址
+				String pAddr = StringUtils.isBlank(rowDataMap.get("P_ADDR")) ? "" : rowDataMap.get("P_ADDR");
+				//收件人
+				String deliReceive = StringUtils.isBlank(rowDataMap.get("DELI_RECEIVER")) ? "" : rowDataMap.get("DELI_RECEIVER");
+				//收件人信箱
+				String deliEmail = StringUtils.isBlank(rowDataMap.get("DELI_EMAIL")) ? "" : rowDataMap.get("DELI_EMAIL");
+				//門號
+				String msisdn = StringUtils.isBlank(rowDataMap.get("MSISDN")) ? "" : rowDataMap.get("MSISDN");
+				//複合主鍵
+				PersonalInformationBackupId personalInformationBackupId = new PersonalInformationBackupId();
+				personalInformationBackupId.setTableName("NBA_CO_MASTER");
+				personalInformationBackupId.setTablePk(cono);
+				personalInformationBackupId.setUuid(UUID.randomUUID().toString());
+				
+				personalInformationBackup.setId(personalInformationBackupId);
+				personalInformationBackup.setUserName(AESUtil.encrypt(userName, encodeKey));
+				personalInformationBackup.setRocId(AESUtil.encrypt(rocId, encodeKey));
+				personalInformationBackup.setEmail(AESUtil.encrypt(mail, encodeKey));
+				personalInformationBackup.setDeliTel(AESUtil.encrypt(deliTel, encodeKey));
+				personalInformationBackup.setTel1(AESUtil.encrypt(tel1, encodeKey));
+				personalInformationBackup.setTtel2(AESUtil.encrypt(tel2, encodeKey));
+				personalInformationBackup.setDeliAddr(AESUtil.encrypt(deliAddr, encodeKey));
+				personalInformationBackup.setBirthday(AESUtil.encrypt(birthday, encodeKey));
+				personalInformationBackup.setReccipient(AESUtil.encrypt(reccipient, encodeKey));
+				personalInformationBackup.setBillAddr(AESUtil.encrypt(billAddr, encodeKey));
+				personalInformationBackup.setPAddr(AESUtil.encrypt(pAddr, encodeKey));
+				personalInformationBackup.setDeliReceiver(AESUtil.encrypt(deliReceive, encodeKey));
+				personalInformationBackup.setDeliEmail(AESUtil.encrypt(deliEmail, encodeKey));
+				personalInformationBackup.setMsisdn(AESUtil.encrypt(msisdn, encodeKey));
+				personalInformationBackup.setUpdateDate(date);
+				
+				userName = StringUtil.getInstance().getHiddenDataByName(userName);
+				rocId = StringUtil.getInstance().getHiddenDataById(rocId);
+				mail= StringUtil.getInstance().getHiddenDataByEmail(mail);
+				deliTel = StringUtil.getInstance().getHiddenDataByNum(deliTel);
+				tel1 = StringUtil.getInstance().getHiddenDataByNum(tel1);
+				tel2 = StringUtil.getInstance().getHiddenDataByNum(tel2);
+				deliAddr = StringUtil.getInstance().getHiddenDataByAddr(deliAddr);
+				birthday = StringUtil.getInstance().getHiddenDataByBirthday(birthday);
+				reccipient = StringUtil.getInstance().getHiddenDataByName(reccipient);
+				billAddr = StringUtil.getInstance().getHiddenDataByAddr(billAddr);
+				pAddr = StringUtil.getInstance().getHiddenDataByAddr(pAddr);
+				deliReceive = StringUtil.getInstance().getHiddenDataByName(deliReceive);
+				deliEmail = StringUtil.getInstance().getHiddenDataByEmail(deliEmail);
+				msisdn = StringUtil.getInstance().getHiddenDataByNum(msisdn);
+				
+				
+				NbaCoMaster nbaCoMaster = nbaCoMasterService.get(cono);
+				nbaCoMaster.setUserName(userName);
+				nbaCoMaster.setRocId(rocId);
+				nbaCoMaster.setEmail(mail);
+				nbaCoMaster.setDeliTel(deliTel);
+				nbaCoMaster.setTel1(tel1);
+				nbaCoMaster.setTtel2(tel2);
+				nbaCoMaster.setDeliAddr(deliAddr);
+				nbaCoMaster.setBirthday(birthday);
+				nbaCoMaster.setReccipient(reccipient);
+				nbaCoMaster.setBillAddr(billAddr);
+				nbaCoMaster.setPAddr(pAddr);
+				nbaCoMaster.setDeliReceiver(deliReceive);
+				nbaCoMaster.setDeliEmail(deliEmail);
+				nbaCoMaster.setMsisdn(msisdn);
+				
+				session.saveOrUpdate(nbaCoMaster);
+				session.saveOrUpdate(personalInformationBackup);
+			}catch(Exception e){
+				log.error(">>>>>>:"+e.getMessage());
+				continue;
+			}
+			i = i + 1;
+			if(i == total){
+				session.flush();
+	            session.clear();
+			}else{
+				if(i % 500 == 0){
+		            session.flush();
+		            session.clear();
+				}
+			}
+			
+			if(i%1000 == 0){
+				System.out.println(">>>>>>>>>>>>處理完" + i + "筆");
+				 transaction.commit();
+				 transaction.begin();
+			}
+			if(i == total){
+				System.out.println(">>>>>>>>>>>>總共處理完" + i + "筆");
+				transaction.commit();
+			}
+		}
+		log.info("====== NBA_CO_MASTER ENCODE FINISH");
+	}
+	
+	/**
+	 * NBA_NAME_LIST
+	 * prod 沒有index
+	 * */
+	public void processNbaNameList() throws Exception{
+		log.info("====== NBA_NAME_LIST ENCODE START");
+		Session session = hibernateTemplate.getSessionFactory().openSession();
+		session.setFlushMode(FlushMode.MANUAL);
+		Transaction transaction = session.beginTransaction();
+		Query query = session.createSQLQuery(nbaNameListSqlStr());
+		query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String,String>> result = query.list();
+		Date date = new Date();
+		int i = 0;
+		int total = result.size();
+		for (Map<String, String> rowDataMap : result) {
+			PersonalInformationBackup personalInformationBackup = new PersonalInformationBackup();
+			try{
+				Object obj = rowDataMap.get("ID");
+				BigDecimal bigDecimal = (BigDecimal) obj;
+				Long id = bigDecimal.longValue();
+				String msisdn = StringUtils.isBlank(rowDataMap.get("MSISDN")) ? "" : rowDataMap.get("MSISDN");
+				String rocId = StringUtils.isBlank(rowDataMap.get("ROC_ID")) ? "" : rowDataMap.get("ROC_ID");
+				
+				
+				//複合主鍵
+				PersonalInformationBackupId personalInformationBackupId = new PersonalInformationBackupId();
+				personalInformationBackupId.setTableName("NBA_NAME_LIST");
+				personalInformationBackupId.setTablePk(String.valueOf(id));
+				personalInformationBackupId.setUuid(UUID.randomUUID().toString());
+				
+				personalInformationBackup.setId(personalInformationBackupId);
+				personalInformationBackup.setMsisdn(AESUtil.encrypt(msisdn, encodeKey));
+				personalInformationBackup.setRocId(AESUtil.encrypt(rocId, encodeKey));
+				personalInformationBackup.setUpdateDate(date);
+				
+				
+				msisdn = StringUtil.getInstance().getHiddenDataByNum(msisdn);
+				rocId = StringUtil.getInstance().getHiddenDataById(rocId);
+				
+				NbaNameList nbaNameList = nbaNameListService.get(id);
+				nbaNameList.setId(id);
+				nbaNameList.setMsisdn(msisdn);
+				nbaNameList.setRocId(rocId);
+				session.saveOrUpdate(nbaNameList);
+				session.saveOrUpdate(personalInformationBackup);
+			}catch(Exception e){
+				log.error(">>>>>>:"+e.getMessage());
+				continue;
+			}
+			i = i + 1;
+			if(i == total){
+				session.flush();
+	            session.clear();
+			}else{
+				if(i % 500 == 0){
+		            session.flush();
+		            session.clear();
+				}
+			}
+			
+			if(i%1000 == 0){
+				System.out.println(">>>>>>>>>>>>處理完" + i + "筆");
+				 transaction.commit();
+				 transaction.begin();
+			}
+			if(i == total){
+				System.out.println(">>>>>>>>>>>>總共處理完" + i + "筆");
+				transaction.commit();
+			}
+		}
+		log.info("====== NBA_NAME_LIST ENCODE FINISH");
+	}
+	
+	
+	/**
+	 * OCR_RECORD
+	 * */
+	public void processOcrRecord() throws Exception{
+		
+	}
+	
+	
+	private String nbaNameListSqlStr() throws Exception{
+		StringBuffer sql = new StringBuffer();
+		sql.append(" SELECT  ");
+		sql.append("  ID,  ");
+		sql.append("  MSISDN,  ");
+		sql.append("  ROC_ID  ");
+		sql.append(" FROM NBA_NAME_LIST ");
+		sql.append(" WHERE 1=1  ");
+//		sql.append(" AND ROWNUM < 2 ");
+		return sql.toString();
+		
+	}
+	
+	
+	private String nbaCoMasterSqlStr() throws Exception{
+		StringBuffer sql = new StringBuffer();
+		sql.append(" SELECT  ");
+		sql.append("	CONO, ");
+		sql.append("	USER_NAME, ");
+		sql.append("	ROC_ID, ");
+		sql.append("	EMAIL, ");
+		sql.append("	DELI_TEL, ");
+		sql.append("	TEL1, ");
+		sql.append("	TTEL2, ");
+		sql.append("	DELI_ADDR, ");
+		sql.append("	BIRTHDAY, ");
+		sql.append("	RECCIPIENT, ");
+		sql.append("	BILL_ADDR, ");
+		sql.append("	P_ADDR, ");
+		sql.append("	DELI_RECEIVER, ");
+		sql.append("	DELI_EMAIL, ");
+		sql.append("	MSISDN ");
+		sql.append(" FROM NBA_CO_MASTER ");
+		sql.append(" WHERE 1=1  ");
+//		sql.append(" AND ROWNUM < 2 ");
+		sql.append(" AND CO_DATE is not null ");
+		sql.append(" AND TO_CHAR(CO_DATE,'yyyy-mm-dd') < TO_CHAR(SYSDATE-120,'yyyy-mm-dd') ");
+		sql.append(" AND CONO not in(SELECT TABLE_PK from PERSONAL_INFORMATION_BACKUP where 1=1 and TABLE_NAME='NBA_CO_MASTER' ) ");
+		sql.append(" order by cono ");
+		
+		return sql.toString();
+	}
+	
+	
+	
+	private String loyaltyRecordSqlStr() throws Exception{
+		StringBuffer sql = new StringBuffer();
+		sql.append(" SELECT ");
+		sql.append(" id, ");
+		sql.append(" MSISDN, ");
+		sql.append(" ROCID, ");
+		sql.append(" CREATE_TIME ");
+		sql.append(" from LOYALTY_RECORD    ");
+		sql.append(" where 1=1 ");
+		sql.append(" AND TO_CHAR(CREATE_TIME,'yyyy-mm-dd') < TO_CHAR(SYSDATE-120,'yyyy-mm-dd') ");
+		sql.append(" AND ROWNUM < 2 ");
+		return sql.toString();
+	}
+	
+	
+	
+	
+	private String fridayOrderSqlStr() throws Exception{
+		StringBuffer sql = new StringBuffer();
+		sql.append(" SELECT ");
+		sql.append(" id, ");
+		sql.append(" CHINESE_NAME, ");
+		sql.append(" EMAIL, ");
+		sql.append(" MSISDN, ");
+		sql.append(" ADDRESS, ");
+		sql.append(" MODIFY_TIME ");
+		sql.append(" from FRIDAY_ORDER    ");
+		sql.append(" where 1=1 ");
+		sql.append(" AND ROWNUM <2  ");
+//		sql.append(" AND TO_CHAR(MODIFY_TIME,'yyyy-mm-dd') < TO_CHAR(SYSDATE-120,'yyyy-mm-dd')  ");
+		return sql.toString();
+	}
+	
+	
+	private String crossCooperationSqlStr() throws Exception{
+		StringBuffer sql = new StringBuffer();
+		sql.append(" SELECT   ");
+		sql.append(" ORDER_NO,  ");
+		sql.append(" USER_NAME,  ");
+		sql.append(" USER_MOBILE,  ");
+		sql.append(" MSISDN,  ");
+		sql.append(" CREATE_DATE  ");
+		sql.append(" FROM CROSS_COOPERATION  ");
+		sql.append(" WHERE 1=1  ");
+		sql.append(" AND  1=1  ");
+		sql.append(" AND CREATE_DATE is not null ");
+		sql.append(" AND ROWNUM <2  ");
+//		sql.append(" AND TO_CHAR(CREATE_DATE,'yyyy-mm-dd') < TO_CHAR(SYSDATE-120,'yyyy-mm-dd') ");
+		return sql.toString();
+	}
+	
+	private String coMasterSqlStr() throws Exception{
+		StringBuffer sql = new StringBuffer();
+		sql.append(" SELECT  ");
+		sql.append("	CONO, ");
+		sql.append("	USER_NAME, ");
+		sql.append("	ROC_ID, ");
+		sql.append("	EMAIL, ");
+		sql.append("	DELI_TEL, ");
+		sql.append("	TEL1, ");
+		sql.append("	TTEL2, ");
+		sql.append("	DELI_ADDR, ");
+		sql.append("	BIRTHDAY, ");
+		sql.append("	RECCIPIENT, ");
+		sql.append("	BILL_ADDR, ");
+		sql.append("	P_ADDR, ");
+		sql.append("	DELI_RECEIVER, ");
+		sql.append("	DELI_EMAIL, ");
+		sql.append("	MSISDN ");
+		sql.append(" FROM CO_MASTER ");
+		sql.append(" WHERE 1=1  ");
+		sql.append(" AND ROWNUM < 2 ");
+		sql.append(" AND ACTIVATION_DATE is not null ");
+		sql.append(" AND TO_CHAR(ACTIVATION_DATE,'yyyy-mm-dd') < TO_CHAR(SYSDATE-120,'yyyy-mm-dd') ");
+		sql.append(" AND CONO not in(SELECT TABLE_PK from PERSONAL_INFORMATION_BACKUP where 1=1 and TABLE_NAME='CO_MASTER' ) ");
+		sql.append(" order by cono ");
+		
+		return sql.toString();
+	}
+	
+	private String tmpCoMasterSqlStr() throws Exception{
+		StringBuffer sql = new StringBuffer();
+		sql.append(" SELECT  ");
+		sql.append("	CONO, ");
+		sql.append("	USER_NAME, ");
+		sql.append("	ROC_ID, ");
+		sql.append("	EMAIL, ");
+		sql.append("	DELI_TEL, ");
+		sql.append("	TEL1, ");
+		sql.append("	TTEL2, ");
+		sql.append("	DELI_ADDR, ");
+		sql.append("	BIRTHDAY, ");
+		sql.append("	RECCIPIENT, ");
+		sql.append("	BILL_ADDR, ");
+		sql.append("	P_ADDR, ");
+		sql.append("	DELI_RECEIVER, ");
+		sql.append("	DELI_EMAIL, ");
+		sql.append("	MSISDN ");
+		sql.append(" FROM TMP_CO_MASTER ");
+		sql.append(" WHERE 1=1 AND ROWNUM <2 ");
+		sql.append(" and cono not in(select p.TABLE_PK from PERSONAL_INFORMATION_BACKUP p where 1=1 and p.TABLE_NAME ='TMP_CO_MASTER'  ) ");
+		sql.append(" order by cono ");
+		
+		return sql.toString();
+	}
+	
 	public static void main(String[] args) {
 		try {
 			ApplicationContext ctx = new SpringApplicationBuilder(SpringbootWebApplication.class).web(WebApplicationType.NONE).run(args);

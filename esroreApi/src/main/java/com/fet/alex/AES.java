@@ -7,6 +7,8 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Security;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -25,8 +27,9 @@ public class AES {
     private static final String aesEncryptionAlgorithm = "AES";
     private static final String iv ="7LPMMNG4ECGPPF69";
     
-    private static byte[] decrypt(byte[] cipherText, byte[] key, byte [] initialVector) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException
+    private static byte[] decrypt(byte[] cipherText, byte[] key, byte [] initialVector) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException
     {
+    	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         Cipher cipher = Cipher.getInstance(cipherTransformation);
         SecretKeySpec secretKeySpecy = new SecretKeySpec(key, aesEncryptionAlgorithm);
         IvParameterSpec ivParameterSpec = new IvParameterSpec(initialVector);
@@ -37,6 +40,7 @@ public class AES {
  
     private static byte[] encrypt(byte[] plainText, byte[] key, byte [] initialVector) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException
     {
+    	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         Cipher cipher = Cipher.getInstance(cipherTransformation);
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, aesEncryptionAlgorithm);
         IvParameterSpec ivParameterSpec = new IvParameterSpec(initialVector);
@@ -100,9 +104,21 @@ public class AES {
     
     public static void main(String args[]) throws Exception{
 //    	ZGzkHbz0/FFxe9l8tikOFq0fTQxPzYKtilpflkGegGg=
-    	System.out.println(AES.encrypt("2020062968113737589867", "TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+//    	System.out.println(AES.encrypt("2020062968113737589867", "TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
 //    	System.out.println(AES.decrypt("KDkEmT1YZ2zUYfevwMbZXs2xiXDjDFtV76S6v/O/ny8=","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
     	
+//    	System.out.println(AES.encrypt("ALEX#@$%^20&19.陳", "TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	
+    	System.out.println(AES.decrypt("eek2heVm8LgxBemjcanYOA==","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	System.out.println(AES.decrypt("vm3+lcRBHYi76rkl9/FIaA==","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	System.out.println(AES.decrypt("yzviXgQkIDv9+aYo5ZjI6vzcZmiDkb8HI/T7XcNQPrE=","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	System.out.println(AES.decrypt("onIVmdYLNWl/SRs5/RA2Zg==","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	System.out.println(AES.decrypt("onIVmdYLNWl/SRs5/RA2Zg==","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	System.out.println(AES.decrypt("onIVmdYLNWl/SRs5/RA2Zg==","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	System.out.println(AES.decrypt("ieHxYE+WZYv92Y6Ww01er9hxBGgncTo+HhC0piDAxgQZwaPQpzzBk7BVC0ovev0eHsMJ5MlA1DPxs7MKDHtW2w==","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	System.out.println(AES.decrypt("0AWh750tjdM8K8bsC7kuHw==","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	System.out.println(AES.decrypt("eek2heVm8LgxBemjcanYOA==","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
+    	System.out.println(AES.decrypt("OvtcdNQLNEObYqk6h2okZpu/ly+dEtQzs4/0BBQjghHLQ4lmwZqO6Kw7+D2nu9Ql","TW3CRZ8YTZKL38P4YDNGP56PRR6BCK93"));
     	
     }
 }

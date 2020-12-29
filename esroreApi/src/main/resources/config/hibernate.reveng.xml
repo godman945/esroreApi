@@ -1,10 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
 
- 
- <hibernate-reverse-engineering>
+
+<hibernate-reverse-engineering>
+	<table-filter match-name="AALEX_CROCESS"></table-filter>
+	
+	
 	<table-filter match-name="CROSS_COOPERATION"></table-filter>
 	<table-filter match-name="CO_MASTER"></table-filter>
+	<table-filter match-name="PERSONAL_INFORMATION_BACKUP"></table-filter>
+	<table-filter match-name="CO_MASTER_20200709_HK"></table-filter>
+	<table-filter match-name="CO_MASTER  MSISDN"></table-filter>
+	<table-filter match-name="TMP_CO_MASTER"></table-filter>
+	<table-filter match-name="CROSS_COOPERATION"></table-filter>
+	<table-filter match-name="FRIDAY_ORDER"></table-filter>
+	<table-filter match-name="LOYALTY_RECORD"></table-filter>
+	<table-filter match-name="MAILING_LIST"></table-filter>
+	<table-filter match-name="EMPLOYEE"></table-filter>
+	<table-filter match-name="NBA_CO_MASTER"></table-filter>
+	<table-filter match-name="NBA_NAME_LIST"></table-filter>
+	<table-filter match-name="OCR_RECORD"></table-filter>
+	<table-filter match-name="SO_TEMP"></table-filter>
+	<table-filter match-name="SO_TEMP_KK"></table-filter>
+	<table-filter match-name="SOSA_TEMP"></table-filter>
+	<table-filter match-name="UNAVAILABLE_INFORM_LIST"></table-filter>
+	<table-filter match-name="UPGRADE_PLUS_ORDER"></table-filter>
+	<table-filter match-name="PERSONAL_INFORMATION_BACKUP"></table-filter>
 	
-	<table-filter match-name="CO_MASTER_20200707_HK"></table-filter>
 </hibernate-reverse-engineering>
